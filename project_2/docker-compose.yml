@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: amazon_postgres_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: amazon_db
+    ports:
+      - "5433:5432"
+    volumes:
+      # Mount CSV data files (cleaned version without index column)
+      - ./data/clean:/data/origin:ro
+      # Mount initialization scripts
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+      # Persist database data
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d amazon_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
