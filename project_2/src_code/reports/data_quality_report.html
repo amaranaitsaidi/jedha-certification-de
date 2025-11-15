@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Quality Report - Amazon Reviews ETL</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 40px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .stat-card .number {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card.total .number { color: #667eea; }
+        .stat-card.passed .number { color: #28a745; }
+        .stat-card.failed .number { color: #dc3545; }
+        .stat-card.rate .number { color: #28a745; }
+
+        .status-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .tests {
+            padding: 40px;
+        }
+
+        .test-item {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .test-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.1);
+        }
+
+        .test-item.passed {
+            border-left: 5px solid #28a745;
+        }
+
+        .test-item.failed {
+            border-left: 5px solid #dc3545;
+        }
+
+        .test-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .test-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .test-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .test-badge.passed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .test-badge.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .test-details {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .test-details strong {
+            color: #333;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .progress-bar {
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745 0%, #28a745 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: width 1s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Data Quality Report</h1>
+            <p>Amazon Reviews ETL Pipeline</p>
+            <p style="opacity: 0.7; margin-top: 10px;">2025-11-12T18:45:12.222916</p>
+        </div>
+
+        <div class="summary">
+            <div class="stat-card total">
+                <div class="number">8</div>
+                <div class="label">Total Tests</div>
+            </div>
+            <div class="stat-card passed">
+                <div class="number">8</div>
+                <div class="label">Passed</div>
+            </div>
+            <div class="stat-card failed">
+                <div class="number">0</div>
+                <div class="label">Failed</div>
+            </div>
+            <div class="stat-card rate">
+                <div class="number">100.0%</div>
+                <div class="label">Success Rate</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; padding: 20px; background: #f8f9fa;">
+            <span class="status-badge">STATUS: EXCELLENT</span>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100.0%;">
+                    100.0%
+                </div>
+            </div>
+        </div>
+
+        <div class="tests">
+            <h2 style="margin-bottom: 30px; color: #333;">Detailed Test Results</h2>
+
+            <div class="test-item passed">
+                <div class="test-header">
+                    <div class="test-name">Postgresql Connection</div>
+                    <div class="test-badge passed">OK PASSED</div>
+                </div>
+                <div class="test-details">
+<p>Successfully connected. Found 42858 products.</p>
+                </div>
+            </div>
+
+            <div class="test-item passed">
+                <div class="test-header">
+                    <div class="test-name">Ratings Range</div>
+                    <div class="test-badge passed">OK PASSED</div>
+                </div>
+                <div class="test-details">
+<p><strong>Total Checked:</strong> 10,000<p><strong>Invalid Count:</strong> 0<p><strong>Min Rating:</strong> 1.0<p><strong>Max Rating:</strong> 5.0
+                </div>
+            </div>
+
+            <div class="test-item passed">
+                <div class="test-header">
+                    <div class="test-name">No Duplicates</div>
+                    <div class="test-badge passed">OK PASSED</div>
+                </div>
+                <div class="test-details">
+<p><strong>Total Reviews:</strong> 111,322<p><strong>Duplicate Count:</strong> 0
+                </div>
+            </div>
+
+            <div class="test-item passed">
+                <div class="test-header">
+                    <div class="test-name">Required Fields Not Null</div>
+                    <div class="test-badge passed">OK PASSED</div>
+                </div>
+                <div class="test-details">
+<p><strong>Review Id:</strong> {'null_count': 0, 'success': True}</p><p><strong>Rating:</strong> {'null_count': 0, 'success': True}</p><p><strong>Buyer Id:</strong> {'null_count': 0, 'success': True}</p>
+                </div>
+            </div>
+
+            <div class="test-item passed">
+                <div class="test-header">
+                    <div class="test-name">Prices Positive</div>
+                    <div class="test-badge passed">OK PASSED</div>
+                </div>
+                <div class="test-details">
+<p><strong>Total Products:</strong> 42,858<p><strong>Negative Prices:</strong> 0<p><strong>Min Price:</strong> 0.000428638027369<p><strong>Max Price:</strong> 2,143.46<p><strong>Avg Price:</strong> 29.721703599321096
+                </div>
+            </div>
+
+            <div class="test-item passed">
+                <div class="test-header">
+                    <div class="test-name">Review Text Not Empty</div>
+                    <div class="test-badge passed">OK PASSED</div>
+                </div>
+                <div class="test-details">
+<p><strong>Total Reviews:</strong> 10,000<p><strong>Empty Texts:</strong> 7<p><strong>Empty Percentage:</strong> 0.07
+                </div>
+            </div>
+
+            <div class="test-item passed">
+                <div class="test-header">
+                    <div class="test-name">Data Types Consistency</div>
+                    <div class="test-badge passed">OK PASSED</div>
+                </div>
+                <div class="test-details">
+<p><strong>Column Types:</strong> {'review_id': 'int64', 'p_id': 'object'}</p><p><strong>Review Id Type Test:</strong> 1
+                </div>
+            </div>
+
+            <div class="test-item passed">
+                <div class="test-header">
+                    <div class="test-name">Referential Integrity</div>
+                    <div class="test-badge passed">OK PASSED</div>
+                </div>
+                <div class="test-details">
+<p><strong>Total References:</strong> 41,323<p><strong>Orphaned References:</strong> 0<p><strong>Valid Percentage:</strong> 100.0
+                </div>
+            </div>
+
+        </div>
+
+        <div class="footer">
+            <p>Generated by Amazon Reviews ETL Pipeline</p>
+            <p style="margin-top: 5px; font-size: 0.9em;">Powered by Great Expectations</p>
+        </div>
+    </div>
+</body>
+</html>

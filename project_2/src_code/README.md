@@ -232,11 +232,58 @@ Colonnes principales :
 - **Upload Snowflake** : ~2-3 minutes pour 111K rows
 - **Total** : ~5 minutes pour le pipeline complet
 
+## Tests de Qualité des Données
+
+### Exécution des Tests
+
+```bash
+# Exécuter la suite complète de tests
+python tests/test_data_quality.py
+
+# Générer le rapport HTML
+python scripts/generate_quality_report.py
+
+# Ouvrir le rapport
+# Le fichier HTML est dans reports/data_quality_report.html
+```
+
+### Tests Disponibles
+
+| # | Test | Description |
+|---|------|-------------|
+| 1 | Connexion PostgreSQL | Vérifie la connexion à la base de données |
+| 2 | Ratings (1-5) | Valide que tous les ratings sont entre 1 et 5 |
+| 3 | Pas de doublons | Détecte les review_id en double |
+| 4 | Champs obligatoires | Vérifie l'absence de NULL |
+| 5 | Prix positifs | S'assure que tous les prix > 0 |
+| 6 | Textes non-vides | Contrôle la présence de contenu |
+| 7 | Types cohérents | Valide les types de données |
+| 8 | Intégrité référentielle | Vérifie les clés étrangères |
+
+**Résultat attendu : 100% de succès (8/8 tests passent)**
+
+### Rapports Générés
+
+- **JSON** : `reports/data_quality_report.json` - Données structurées
+- **HTML** : `reports/data_quality_report.html` - Rapport visuel interactif
+
+Le rapport HTML inclut :
+- Taux de réussite global
+- Détails de chaque test
+- Statistiques (compteurs, pourcentages)
+- Badge de statut (EXCELLENT/GOOD/NEEDS ATTENTION)
+
+### Technologies de Test
+
+- **Great Expectations 0.18.19** - Framework de validation
+- **pytest 8.3.3** - Framework de tests
+- **pandas** - Manipulation de données pour les tests
+
 ## Développement
 
 ```bash
-# Tests
-pytest tests/
+# Tests de qualité
+python tests/test_data_quality.py
 
 # Linter
 flake8 scripts/

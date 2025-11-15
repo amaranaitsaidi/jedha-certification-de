@@ -9,7 +9,7 @@ pyyaml==6.0.3
 pandasql==0.7.3
 
 # Database Connectors
-psycopg2-binary==2.9.9   # PostgreSQL
+psycopg2-binary==2.9.11   # PostgreSQL
 pymongo==4.15.3          # MongoDB
 snowflake-connector-python>=3.0.0  # Snowflake
 
@@ -21,3 +21,10 @@ s3transfer==0.14.0
 # Utilities
 requests==2.32.5
 colorama==0.4.6
+
+# Data Quality & Testing
+great-expectations==1.9.0
+pytest==8.3.3
+pytest-html==4.1.1         # Generate HTML test reports
+pytest-cov==6.0.0          # Code coverage reporting
+pytest-xdist==3.6.1        # Parallel test execution

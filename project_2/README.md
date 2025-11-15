@@ -111,9 +111,36 @@ Le projet contient **~1.7M d'enregistrements** sur 25 tables :
 - **100,000** acheteurs
 - Et plus...
 
+## Tests de Qualité
+
+Le projet inclut une suite complète de tests de qualité des données :
+
+```bash
+cd src_code
+
+# Exécuter les tests
+python tests/test_data_quality.py
+
+# Générer le rapport HTML
+python scripts/generate_quality_report.py
+```
+
+**8 tests automatisés** :
+- Connexion PostgreSQL
+- Validation des ratings (1-5)
+- Détection des doublons
+- Champs obligatoires non-NULL
+- Prix positifs
+- Textes non-vides
+- Cohérence des types
+- Intégrité référentielle
+
+Les rapports sont disponibles dans `src_code/reports/` (JSON + HTML).
+
 ## Documentation Détaillée
 
 - **`src_code/README.md`** - Documentation complète du pipeline ETL
+- **`CONFORMITE_ETL.md`** - Analyse de conformité du projet
 - **`.env.example`** - Template de configuration avec explications
 
 ## Technologies
