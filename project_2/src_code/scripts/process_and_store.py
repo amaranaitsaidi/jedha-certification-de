@@ -302,7 +302,24 @@ class ReviewProcessor:
         df_clean = df_clean[(df_clean['rating'] >= 1) & (df_clean['rating'] <= 5)]
         logger.info(f"  [OK] Removed {len(invalid_rating)} records with invalid rating")
 
-        # 4. Fill missing values
+        # 4. Reject empty or null descriptions
+
+        empty_description = df_clean['description'].isnull() | (df_clean['description'].str.strip().str.len() == 0)
+        empty_description_records = df_clean[empty_description]
+
+        for _, rec in empty_description_records.iterrows():
+            rejected_records.append({
+                'review_id': rec.get('review_id', 'UNKNOWN'),
+                'rejection_reason': 'empty_description',
+                'rejected_at': datetime.now(),
+                'original_data': rec.to_dict(),
+                'error_details': 'Description is empty or null'
+            })
+
+        df_clean = df_clean[~empty_description]
+        logger.info(f"  [OK] Removed {len(empty_description_records)} records with empty/null description")
+
+        # 5. Fill missing values
         df_clean['title'] = df_clean['title'].fillna('')
         df_clean['description'] = df_clean['description'].fillna('')
         df_clean['category'] = df_clean['category'].fillna('Unknown')
