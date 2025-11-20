@@ -113,7 +113,8 @@ class PipelineOrchestrator:
     def step_extract(self) -> bool:
         """Step 1: Extract data from PostgreSQL to S3."""
         return self._run_script(
-            'extract_to_s3.py',
+            #'extract_to_s3.py',
+            'extract_postgres_to_s3.py',
             'Extract raw data from PostgreSQL to S3 Data Lake'
         )
 
