@@ -14,6 +14,8 @@ import logging
 import sys
 import os
 from dotenv import load_dotenv
+import hashlib
+
 
 # Load environment variables
 load_dotenv()
@@ -44,7 +46,7 @@ class PostgresToS3Extractor:
         self.postgres_conn_string = postgres_conn_string
         self.s3_bucket = s3_bucket
         self.aws_region = aws_region
-
+        self.salt = os.getenv("ANONYMIZATION_SALT", "default_salt")
         # Initialize S3 client
         self.s3_client = boto3.client(
             's3',
@@ -63,6 +65,13 @@ class PostgresToS3Extractor:
         except Exception as e:
             logger.error(f"[FAIL] Failed to connect to PostgreSQL: {e}")
             raise
+    
+    def anonymize_buyer(self, input_string: str) -> str:
+        """Anonymize buyer identifier using SHA-256 hashing."""
+        to_hash = (self.salt + input_string).encode('utf-8')
+        hash_value = hashlib.sha256(to_hash).hexdigest()
+        return hash_value
+
 
     def extract_table(self, table_name: str, query: str = None) -> pd.DataFrame:
         """
@@ -138,8 +147,14 @@ class PostgresToS3Extractor:
         Returns:
             S3 URI
         """
+    def extract_and_upload_table(self, table_name: str, query: str = None, prefix: str = "raw/") -> str:
         # Extract
         df = self.extract_table(table_name, query)
+
+        # Anonymize buyer identifiers if table contains 'buyer_id'
+        logger.info(f"Starting anonymize data for table {table_name}...")
+        if "buyer_id" in df.columns:
+            df["buyer_id"] = df["buyer_id"].astype(str).apply(self.anonymize_buyer)
 
         # Generate S3 key with timestamp
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')

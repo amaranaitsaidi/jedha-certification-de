@@ -11,7 +11,7 @@
 |-------|--------|
 | Titre du Document | Plan de Test - Systeme ETL d'Analyse des Avis Amazon |
 | Version | 1.0 |
-| Auteur | Equipe Data Engineering |
+| Auteur | NAIT SAIDI Amara |
 | Date | 14 janvier 2025 |
 | Nom du Projet | Pipeline ETL d'Analyse des Avis Amazon |
 | Phase de Test | Tests d'Integration Systeme et Acceptation |
@@ -23,23 +23,23 @@
 
 ### 2.1 Objectif du Projet
 
-L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui :
+L'objectif principal de ce projet est de déployer un pipeline ETL automatise qui :
 
-- Extrait les donnees d'avis clients et de produits depuis une base PostgreSQL transactionnelle
-- Traite et transforme les donnees avec validation et nettoyage de la qualite
-- Enrichit les donnees avec des metriques supplementaires (longueur_texte, a_image, a_commandes)
-- Charge les donnees traitees dans Snowflake (Entrepot de Donnees) pour l'analytique
-- Enregistre les metadonnees d'execution et les enregistrements rejetes dans MongoDB
-- Fournit une validation de la qualite des donnees via des tests automatises
+- Extrait les données d'avis clients et de produits depuis une base PostgreSQL transactionnelle
+- Traite et transforme les données avec validation et nettoyage de la qualite
+- Enrichit les données avec des metriques supplementaires (text_lenght, has_image, has_orderes)
+- Charge les données traitees dans Snowflake (Data Warehouse) pour l'analytique
+- Enregistre les metadonnées d'execution et les enregistrements rejetes dans une base de données NoSQL (MongoDB)
+- Fournit une validation de la qualite des données via des tests automatises
 
 ### 2.2 Objectifs des Tests
 
 - Valider que les exigences fonctionnelles sont satisfaites
 - Garantir que les performances respectent les SLA (< 10 minutes de bout en bout)
-- Verifier la qualite et l'exactitude des donnees (objectif : < 1% de taux de rejet)
+- Verifier la qualite et l'exactitude des données (objectif : < 1% de taux de rejet)
 - Confirmer l'evolutivite et la fiabilite du systeme
 - Valider le rapport cout-efficacite (< 0,10 $ par 1000 avis traites)
-- Garantir l'integrite des donnees a travers toutes les etapes du pipeline
+- Garantir l'integrite des données a travers toutes les etapes du pipeline
 
 ---
 
@@ -48,10 +48,10 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 ### 3.1 Dans le Perimetre
 
 - Fonctionnalite du pipeline ETL (Extraction, Transformation, Chargement)
-- Validation et nettoyage de la qualite des donnees
+- Validation et nettoyage de la qualite des données
 - Tests de performance et d'evolutivite
 - Tests d'integration avec PostgreSQL, S3, Snowflake, MongoDB
-- Exactitude de la transformation des donnees (jointures, enrichissement)
+- Exactitude de la transformation des données (jointures, enrichissement)
 - Analyse des couts et optimisation
 - Validation des criteres d'acceptation utilisateur
 
@@ -72,18 +72,18 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 | Niveau de Test | Description | Responsabilite |
 |----------------|-------------|----------------|
 | Tests Unitaires | Test des composants individuels (transformations, validation) | Equipe Dev |
-| Tests d'Integration | Test des interactions entre composants (connexions DB, flux de donnees) | Equipe QA |
+| Tests d'Integration | Test des interactions entre composants (connexions DB, flux de données) | Equipe QA |
 | Tests Systeme | Test du workflow de bout en bout (pipeline complet) | Equipe QA |
 | Tests de Performance | Test de charge et de temps de traitement | Equipe Performance |
-| Tests de Qualite des Donnees | Regles de validation et exactitude | Equipe Qualite Donnees |
+| Tests de Qualite des données | Regles de validation et exactitude | Equipe Qualite données |
 
 ### 4.2 Types de Tests
 
 #### 4.2.1 Tests Fonctionnels
 - Execution des jobs ETL (extract_to_s3.py, process_and_store.py)
-- Exactitude de la transformation des donnees
-- Validation et nettoyage des donnees
-- Fonctionnalite d'enregistrement des metadonnees
+- Exactitude de la transformation des données
+- Validation et nettoyage des données
+- Fonctionnalite d'enregistrement des metadonnées
 
 #### 4.2.2 Tests Non-Fonctionnels
 - Benchmarking des performances
@@ -105,50 +105,50 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 |-------|--------|
 | ID Cas de Test | TC_ETL_001 |
 | Description | Extraire les 6 tables (product, category, review, product_reviews, review_images, orders) vers S3 |
-| Prerequis | - Conteneur PostgreSQL en cours d'execution<br>- Credentials AWS S3 configures<br>- Tables remplies avec des donnees |
+| Prerequis | - Conteneur PostgreSQL en cours d'execution<br>- Credentials AWS S3 configures<br>- Tables remplies avec des données |
 | Etapes de Test | 1. Demarrer le conteneur PostgreSQL<br>2. Executer `python scripts/extract_to_s3.py`<br>3. Verifier la creation des fichiers S3<br>4. Valider que les comptages d'enregistrements correspondent a la source |
 | Resultat Attendu | Toutes les tables extraites vers S3 en tant que fichiers CSV avec horodatages |
-| Criteres de Validation | - 42 858 produits extraits<br>- 111 322 avis extraits<br>- 222 644 commandes extraites<br>- Aucune perte de donnees<br>- Temps d'execution < 2 minutes |
+| Criteres de Validation | - 42 858 produits extraits<br>- 111 322 avis extraits<br>- 222 644 commandes extraites<br>- Aucune perte de données<br>- Temps d'execution < 2 minutes |
 
-#### Scenario 2: Transformation et Jointure des Donnees
+#### Scenario 2: Transformation et Jointure des données
 
-**Objectif**: Valider les jointures SQL et l'enrichissement des donnees
+**Objectif**: Valider les jointures SQL et l'enrichissement des données
 
 | Champ | Valeur |
 |-------|--------|
 | ID Cas de Test | TC_ETL_002 |
-| Description | Joindre 6 tables et enrichir les donnees avec des champs calcules |
-| Prerequis | Donnees brutes disponibles dans S3 |
-| Etapes de Test | 1. Charger les donnees depuis S3<br>2. Executer les jointures SQL avec pandasql<br>3. Ajouter les champs calcules (longueur_texte, a_image, a_commandes)<br>4. Valider le jeu de donnees joint |
+| Description | Joindre 6 tables et enrichir les données avec des champs calcules |
+| Prerequis | données brutes disponibles dans S3 |
+| Etapes de Test | 1. Charger les données depuis S3<br>2. Executer les jointures SQL avec pandasql<br>3. Ajouter les champs calcules (text_lenght, has_image, has_orderes)<br>4. Valider le jeu de données joint |
 | Resultat Attendu | 111 322 lignes avec tous les champs enrichis |
-| Criteres de Validation | - Les 6 tables jointes avec succes<br>- Aucune valeur NULL dans p_id ou review_id<br>- longueur_texte calculee correctement<br>- Indicateurs a_image et a_commandes precis<br>- Temps de traitement < 2 minutes |
+| Criteres de Validation | - Les 6 tables jointes avec succes<br>- Aucune valeur NULL dans p_id ou review_id<br>- text_lenght calculee correctement<br>- Indicateurs has_image et has_orderes precis<br>- Temps de traitement < 2 minutes |
 
-### 5.2 Tests de Qualite des Donnees
+### 5.2 Tests de Qualite des données
 
-#### Scenario 3: Validation et Nettoyage des Donnees
+#### Scenario 3: Validation et Nettoyage des données
 
-**Objectif**: Valider les verifications de qualite des donnees et le nettoyage
+**Objectif**: Valider les verifications de qualite des données et le nettoyage
 
 | Champ | Valeur |
 |-------|--------|
 | ID Cas de Test | TC_DQ_001 |
 | Description | Tester la fonction clean_and_validate() |
-| Donnees de Test | 111 322 enregistrements d'avis |
+| données de Test | 111 322 enregistrements d'avis |
 | Verifications de Qualite | - Detection des doublons (review_id)<br>- Validation des champs requis<br>- Validation de la plage de notation (1-5)<br>- Detection des valeurs NULL |
-| Resultat Attendu | Jeu de donnees nettoye avec < 1% de taux de rejet |
-| Criteres de Validation | - 0 doublon dans le jeu de donnees final<br>- Toutes les notes entre 1 et 5<br>- Aucun NULL dans review_id, p_id, buyer_id<br>- Enregistrements rejetes enregistres dans MongoDB |
+| Resultat Attendu | Jeu de données nettoye avec < 1% de taux de rejet |
+| Criteres de Validation | - 0 doublon dans le jeu de données final<br>- Toutes les notes entre 1 et 5<br>- Aucun NULL dans review_id, p_id, buyer_id<br>- Enregistrements rejetes enregistres dans MongoDB |
 
-#### Scenario 4: Validation des Types de Donnees
+#### Scenario 4: Validation des Types de données
 
-**Objectif**: Assurer la coherence des types de donnees
+**Objectif**: Assurer la coherence des types de données
 
 | Champ | Valeur |
 |-------|--------|
 | ID Cas de Test | TC_DQ_002 |
-| Description | Valider les types de donnees apres transformation |
-| Etapes de Test | 1. Verifier que la note est numerique (int)<br>2. Verifier que les champs texte sont des chaines<br>3. Verifier les indicateurs booleens (a_image, a_commandes)<br>4. Verifier que les dates sont au format datetime |
-| Resultat Attendu | Tous les champs ont les types de donnees corrects |
-| Criteres de Validation | - note: int64 (1-5)<br>- longueur_texte: int64<br>- a_image: booleen<br>- a_commandes: booleen<br>- Tous les champs texte: string |
+| Description | Valider les types de données apres transformation |
+| Etapes de Test | 1. Verifier que la note est numerique (int)<br>2. Verifier que les champs texte sont des chaines<br>3. Verifier les indicateurs booleens (has_image, has_orderes)<br>4. Verifier que les dates sont au format datetime |
+| Resultat Attendu | Tous les champs ont les types de données corrects |
+| Criteres de Validation | - note: int64 (1-5)<br>- text_lenght: int64<br>- has_image: booleen<br>- has_orderes: booleen<br>- Tous les champs texte: string |
 
 #### Scenario 5: Integrite Referentielle
 
@@ -184,10 +184,10 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 | Champ | Valeur |
 |-------|--------|
 | ID Cas de Test | TC_PERF_002 |
-| Description | Mesurer la vitesse de chargement des donnees Snowflake |
-| Etapes de Test | 1. Preparer 111 322 enregistrements nettoyes<br>2. Executer l'insertion en masse vers Snowflake<br>3. Mesurer le debit (enregistrements/seconde)<br>4. Valider l'integrite des donnees apres chargement |
+| Description | Mesurer la vitesse de chargement des données Snowflake |
+| Etapes de Test | 1. Preparer 111 322 enregistrements nettoyes<br>2. Executer l'insertion en masse vers Snowflake<br>3. Mesurer le debit (enregistrements/seconde)<br>4. Valider l'integrite des données apres chargement |
 | Resultat Attendu | Chargement en masse efficace sans erreurs |
-| Criteres de Validation | - Debit > 500 enregistrements/seconde<br>- 0 erreur d'insertion<br>- Integrite des donnees verifiee (comptage correspondant)<br>- Temps de chargement < 5 minutes |
+| Criteres de Validation | - Debit > 500 enregistrements/seconde<br>- 0 erreur d'insertion<br>- Integrite des données verifiee (comptage correspondant)<br>- Temps de chargement < 5 minutes |
 
 ### 5.4 Tests d'Analyse des Couts
 
@@ -199,35 +199,35 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 |-------|--------|
 | ID Cas de Test | TC_COST_001 |
 | Description | Mesurer le cout de traitement des avis |
-| Metriques | - Couts de calcul (traitement local)<br>- Couts de stockage (S3 + Snowflake)<br>- Couts de transfert de donnees (PostgreSQL -> S3 -> Snowflake)<br>- Couts d'enregistrement MongoDB |
+| Metriques | - Couts de calcul (traitement local)<br>- Couts de stockage (S3 + Snowflake)<br>- Couts de transfert de données (PostgreSQL -> S3 -> Snowflake)<br>- Couts d'enregistrement MongoDB |
 | Etapes de Test | 1. Traiter 111 322 avis<br>2. Suivre l'utilisation des ressources<br>3. Calculer les couts par avis<br>4. Projeter les couts mensuels |
 | Resultat Attendu | Cout dans les contraintes budgetaires |
 | Criteres de Validation | - Cout par 1000 avis < 0,10 $<br>- Projection mensuelle pour 1M d'avis < 100 $<br>- Couts de stockage optimises |
 
 ### 5.5 Tests d'Integration
 
-#### Scenario 9: Flux de Donnees de Bout en Bout
+#### Scenario 9: Flux de données de Bout en Bout
 
-**Objectif**: Valider l'integration complete du pipeline de donnees
+**Objectif**: Valider l'integration complete du pipeline de données
 
 | Champ | Valeur |
 |-------|--------|
 | ID Cas de Test | TC_INT_001 |
 | Description | Tester le flux complet de PostgreSQL vers Snowflake + MongoDB |
-| Etapes de Test | 1. Demarrer les conteneurs PostgreSQL et MongoDB<br>2. Executer `python scripts/pipeline.py --all`<br>3. Verifier la creation des fichiers S3<br>4. Verifier le remplissage de la table Snowflake<br>5. Valider les journaux et metadonnees MongoDB |
-| Resultat Attendu | Les donnees circulent sans probleme a travers toutes les etapes |
-| Criteres de Validation | - Tous les 111 322 avis dans Snowflake<br>- Metadonnees du pipeline dans MongoDB<br>- Journaux d'execution captures<br>- 0 enregistrement rejete (ou correctement enregistre)<br>- Temps de bout en bout < 10 minutes |
+| Etapes de Test | 1. Demarrer les conteneurs PostgreSQL et MongoDB<br>2. Executer `python scripts/pipeline.py --all`<br>3. Verifier la creation des fichiers S3<br>4. Verifier le remplissage de la table Snowflake<br>5. Valider les journaux et metadonnées MongoDB |
+| Resultat Attendu | Les données circulent sans probleme a travers toutes les etapes |
+| Criteres de Validation | - Tous les 111 322 avis dans Snowflake<br>- Metadonnées du pipeline dans MongoDB<br>- Journaux d'execution captures<br>- 0 enregistrement rejete (ou correctement enregistre)<br>- Temps de bout en bout < 10 minutes |
 
 #### Scenario 10: Verification de l'Enregistrement MongoDB
 
-**Objectif**: Valider la fonctionnalite des metadonnees et de l'enregistrement
+**Objectif**: Valider la fonctionnalite des metadonnées et de l'enregistrement
 
 | Champ | Valeur |
 |-------|--------|
 | ID Cas de Test | TC_INT_002 |
 | Description | Tester l'enregistrement MongoDB de l'execution du pipeline |
 | Etapes de Test | 1. Executer le pipeline<br>2. Interroger les collections MongoDB<br>3. Verifier pipeline_metadata<br>4. Verifier rejected_records (le cas echeant)<br>5. Valider les horodatages des journaux |
-| Resultat Attendu | Metadonnees d'execution completes capturees |
+| Resultat Attendu | Metadonnées d'execution completes capturees |
 | Criteres de Validation | - Collection pipeline_metadata existe<br>- Contient les stats d'execution (total_records, clean_records, rejected_records)<br>- Horodatages precis<br>- Enregistrements rejetes enregistres avec raisons |
 
 ### 5.6 Tests Unitaires
@@ -240,14 +240,14 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 |-------|--------|
 | ID Cas de Test | TC_UNIT_001 |
 | Description | Tester la fonction clean_and_validate() avec cas limites |
-| Donnees de Test | - Echantillon de donnees propres<br>- Donnees avec doublons<br>- Donnees avec valeurs NULL<br>- Donnees avec notes invalides |
+| données de Test | - Echantillon de données propres<br>- données avec doublons<br>- données avec valeurs NULL<br>- données avec notes invalides |
 | Etapes de Test | Executer la suite de tests pytest: `pytest tests/test_transformations.py -v` |
 | Resultat Attendu | Tous les tests unitaires reussis |
 | Criteres de Validation | - test_clean_data_with_no_issues: PASS<br>- test_detect_duplicates: PASS<br>- test_detect_null_values: PASS<br>- test_detect_invalid_ratings: PASS<br>- test_data_types_after_cleaning: PASS |
 
-#### Scenario 12: Tests de Qualite des Donnees (Great Expectations)
+#### Scenario 12: Tests de Qualite des données (Great Expectations)
 
-**Objectif**: Valider la suite de tests de qualite des donnees automatises
+**Objectif**: Valider la suite de tests de qualite des données automatises
 
 | Champ | Valeur |
 |-------|--------|
@@ -255,7 +255,7 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 | Description | Executer la suite de tests Great Expectations |
 | Etapes de Test | Executer: `python tests/test_data_quality.py` |
 | Resultat Attendu | Tous les 8 tests de qualite reussis |
-| Criteres de Validation | - Connexion PostgreSQL: PASS<br>- Notes des avis (1-5): PASS<br>- Aucun doublon: PASS<br>- Champs requis non NULL: PASS<br>- Prix positifs: PASS<br>- Texte d'avis non vide: PASS<br>- Coherence des types de donnees: PASS<br>- Integrite referentielle: PASS |
+| Criteres de Validation | - Connexion PostgreSQL: PASS<br>- Notes des avis (1-5): PASS<br>- Aucun doublon: PASS<br>- Champs requis non NULL: PASS<br>- Prix positifs: PASS<br>- Texte d'avis non vide: PASS<br>- Coherence des types de données: PASS<br>- Integrite referentielle: PASS |
 
 ---
 
@@ -267,7 +267,7 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 |-----------|---------------|
 | Machine de Developpement | 8 GB RAM minimum, 16 GB recommande |
 | Conteneurs Docker | PostgreSQL: 2 GB RAM, MongoDB: 1 GB RAM |
-| Stockage | 10 GB disponible pour donnees et conteneurs |
+| Stockage | 10 GB disponible pour données et conteneurs |
 | Reseau | Internet stable pour AWS S3 et Snowflake |
 
 ### 6.2 Exigences Logicielles
@@ -276,16 +276,16 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 |----------|---------|----------|
 | Python | 3.11+ | Scripts ETL |
 | Docker | 20.10+ | Conteneurs PostgreSQL et MongoDB |
-| PostgreSQL | 17 | Base de donnees source |
-| MongoDB | 7.0 | Enregistrement et metadonnees |
+| PostgreSQL | 17 | Base de données source |
+| MongoDB | 7.0 | Enregistrement et metadonnées |
 | AWS S3 | - | Stockage Data Lake |
-| Snowflake | - | Entrepot de Donnees |
+| Snowflake | - | Entrepot de données |
 | pytest | 8.3.3 | Tests unitaires |
-| Great Expectations | 0.18.19 | Validation qualite des donnees |
+| Great Expectations | 0.18.19 | Validation qualite des données |
 
-### 6.3 Exigences en Donnees de Test
+### 6.3 Exigences en données de Test
 
-| Ensemble de Donnees | Volume | Description |
+| Ensemble de données | Volume | Description |
 |---------------------|--------|-------------|
 | Produits | 42 858 enregistrements | Catalogue de produits |
 | Categories | 2 enregistrements | Recherche de categorie |
@@ -293,7 +293,7 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 | Avis-Produits | 111 322 enregistrements | Mapping Avis-Produit |
 | Images d'Avis | 119 382 enregistrements | URLs d'images |
 | Commandes | 222 644 enregistrements | Historique de commandes |
-| **Total** | **607 630 enregistrements** | Jeu de donnees complet |
+| **Total** | **607 630 enregistrements** | Jeu de données complet |
 
 ---
 
@@ -304,7 +304,7 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 - [TERMINE] Developpement complete
 - [TERMINE] Tests unitaires implementes
 - [TERMINE] Environnement de test pret (conteneurs Docker)
-- [TERMINE] Donnees de test preparees (fichiers CSV charges)
+- [TERMINE] données de test preparees (fichiers CSV charges)
 - [TERMINE] Fichiers de configuration prets (.env, config.yaml)
 - [TERMINE] Plan de test approuve par les parties prenantes
 
@@ -313,7 +313,7 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 - [TERMINE] Tous les cas de test critiques passes (TC_ETL_*, TC_DQ_*, TC_PERF_*)
 - [TERMINE] Aucun defaut de severite 1 ou 2 ouvert
 - [TERMINE] Criteres de performance atteints (< 10 min de bout en bout)
-- [TERMINE] Criteres de qualite des donnees atteints (< 1% de taux de rejet)
+- [TERMINE] Criteres de qualite des données atteints (< 1% de taux de rejet)
 - [TERMINE] Projections de couts acceptables (< 0,10 $ par 1000 avis)
 - [TERMINE] Tous les tests unitaires reussis (pytest)
 - [TERMINE] Tous les tests Great Expectations reussis
@@ -328,9 +328,9 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 | Echec de connexion PostgreSQL | Faible | Elevee | Implementer logique de reconnexion, verifications de sante |
 | Problemes de credentials AWS S3 | Moyenne | Elevee | Valider les credentials dans .env, implementer gestion d'erreurs |
 | Entrepot Snowflake indisponible | Faible | Elevee | Implementer mecanisme de reessai, entrepot de secours |
-| Croissance du volume de donnees (>1M avis) | Elevee | Moyenne | Conception pour mise a l'echelle horizontale, traitement par lots |
-| Epuisement de la memoire | Moyenne | Moyenne | Implementer decoupage pour grands jeux de donnees, surveiller memoire |
-| Degradation de la qualite des donnees | Faible | Elevee | Surveillance reguliere, alertes automatiques sur taux de rejet > 1% |
+| Croissance du volume de données (>1M avis) | Elevee | Moyenne | Conception pour mise a l'echelle horizontale, traitement par lots |
+| Epuisement de la memoire | Moyenne | Moyenne | Implementer decoupage pour grands jeux de données, surveiller memoire |
+| Degradation de la qualite des données | Faible | Elevee | Surveillance reguliere, alertes automatiques sur taux de rejet > 1% |
 | Depassements de couts | Moyenne | Elevee | Configurer alertes de couts, optimiser requetes Snowflake |
 | Echec de l'enregistrement MongoDB | Faible | Faible | Enregistrement non bloquant, repli sur journaux fichiers |
 
@@ -344,7 +344,7 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 | Tests Unitaires | 15 janvier 2025 | 16 janvier 2025 | 2 jours | Equipe Dev |
 | Tests d'Integration | 16 janvier 2025 | 18 janvier 2025 | 3 jours | Equipe QA |
 | Tests de Performance | 18 janvier 2025 | 20 janvier 2025 | 3 jours | Equipe Performance |
-| Tests de Qualite des Donnees | 20 janvier 2025 | 21 janvier 2025 | 2 jours | Equipe Qualite Donnees |
+| Tests de Qualite des données | 20 janvier 2025 | 21 janvier 2025 | 2 jours | Equipe Qualite données |
 | Tests d'Acceptation Utilisateur | 21 janvier 2025 | 23 janvier 2025 | 3 jours | Utilisateurs Metier |
 | Corrections de Bugs et Re-tests | 23 janvier 2025 | 25 janvier 2025 | 3 jours | Equipe Dev |
 | **Duree Totale** | | | **12 jours** | |
@@ -357,7 +357,7 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 
 | Severite | Description | Temps de Reponse | Exemple |
 |----------|-------------|------------------|---------|
-| 1 - Critique | Systeme en panne, perte de donnees, corruption | Immediat | Echec de connexion PostgreSQL, donnees corrompues dans Snowflake |
+| 1 - Critique | Systeme en panne, perte de données, corruption | Immediat | Echec de connexion PostgreSQL, données corrompues dans Snowflake |
 | 2 - Elevee | Fonction majeure non fonctionnelle, bloquante | 4 heures | Echec du telechargement S3, crash de transformation |
 | 3 - Moyenne | Fonction mineure affectee, solution de contournement existe | 24 heures | Performance de requete lente, entree de journal manquante |
 | 4 - Faible | Problemes cosmetiques, amelioration | Prochaine version | Faute de frappe dans message de journal, probleme de formatage |
@@ -377,7 +377,7 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 2. **Rapport d'Execution des Tests** (apres execution des tests)
 3. **Resultats des Tests** (rapports pytest, resultats Great Expectations)
 4. **Journal des Defauts** (liste des problemes identifies)
-5. **Metriques de Performance** (donnees de chronometrage, debit)
+5. **Metriques de Performance** (données de chronometrage, debit)
 6. **Rapport d'Analyse des Couts** (ventilation des couts de traitement)
 7. **Rapport d'Acceptation** (decision Go/No-Go)
 
@@ -390,15 +390,15 @@ L'objectif principal de ce projet est de deployer un pipeline ETL automatise qui
 | Responsable Tests | Planification globale des tests, coordination, reporting | [Nom] |
 | Responsable QA | Execution des tests, gestion des defauts | [Nom] |
 | Responsable Dev | Implementation des tests unitaires, corrections de bugs | [Nom] |
-| Ingenieur Donnees | Developpement du pipeline ETL, optimisation des performances | [Nom] |
-| Analyste Qualite Donnees | Validation des donnees, metriques de qualite | [Nom] |
+| Ingenieur données | Developpement du pipeline ETL, optimisation des performances | [Nom] |
+| Analyste Qualite données | Validation des données, metriques de qualite | [Nom] |
 | Responsable Metier | Validation des exigences, approbation d'acceptation | [Nom] |
 
 ---
 
 ## 13. Annexes
 
-### 13.1 Echantillons de Donnees de Test
+### 13.1 Echantillons de données de Test
 
 Exemple de structure d'enregistrement d'avis:
 ```json
@@ -420,7 +420,7 @@ Exemple de structure d'enregistrement d'avis:
 ### 13.2 Fichiers de Configuration
 
 Fichiers de configuration cles:
-- `src_code/.env` - Credentials de base de donnees et config AWS/Snowflake
+- `src_code/.env` - Credentials de base de données et config AWS/Snowflake
 - `src_code/config/config.yaml` - Liste des tables et parametres du pipeline
 - `src_code/pytest.ini` - Configuration des tests
 - `docker-compose.postgres.yml` - Configuration PostgreSQL
@@ -429,7 +429,7 @@ Fichiers de configuration cles:
 ### 13.3 Commandes d'Execution des Tests
 
 ```bash
-# Demarrer les bases de donnees
+# Demarrer les bases de données
 docker-compose -f docker-compose.postgres.yml up -d
 cd src_code && docker-compose -f docker-compose.mongodb.yml up -d
 
@@ -437,7 +437,7 @@ cd src_code && docker-compose -f docker-compose.mongodb.yml up -d
 cd src_code
 pytest tests/test_transformations.py -v
 
-# Executer les tests de qualite des donnees
+# Executer les tests de qualite des données
 python tests/test_data_quality.py
 
 # Generer le rapport de qualite
@@ -491,11 +491,11 @@ python scripts/verify_mongodb.py
 | Categorie | Total | Reussis | Echoues | Taux de Reussite |
 |-----------|-------|---------|---------|------------------|
 | Pipeline ETL | 2 | 2 | 0 | 100% |
-| Qualite des Donnees | 5 | 5 | 0 | 100% |
+| Qualite des données | 5 | 5 | 0 | 100% |
 | Performance | 2 | 2 | 0 | 100% |
 | Integration | 2 | 2 | 0 | 100% |
 | Tests Unitaires (Transformations) | 13 | 13 | 0 | 100% |
-| Tests Unitaires (Qualite Donnees) | 8 | 8 | 0 | 100% |
+| Tests Unitaires (Qualite données) | 8 | 8 | 0 | 100% |
 | **TOTAL** | **32** | **32** | **0** | **100%** |
 
 ### 1.3 Progression de l'Execution des Tests
@@ -507,7 +507,7 @@ Preparation des Tests          TERMINE       2 jours    100%
 Tests Unitaires                TERMINE       2 jours    100%
 Tests d'Integration            TERMINE       3 jours    100%
 Tests de Performance           TERMINE       3 jours    100%
-Tests de Qualite des Donnees   TERMINE       2 jours    100%
+Tests de Qualite des données   TERMINE       2 jours    100%
 UAT                            TERMINE       3 jours    100%
 ```
 
@@ -530,15 +530,15 @@ UAT                            TERMINE       3 jours    100%
 | Avis extraits | 111 322 | 111 322 | PASS |
 | Commandes extraites | 222 644 | 222 644 | PASS |
 | Temps d'execution | < 2 min | 1 min 23 s | PASS |
-| Integrite des donnees | 100% | 100% | PASS |
+| Integrite des données | 100% | 100% | PASS |
 
 **Notes**:
 - Script `extract_to_s3.py` execute avec succes
 - Toutes les validations passees
-- Aucune perte de donnees detectee
+- Aucune perte de données detectee
 - Gestion d'erreurs et journalisation appropriees
 
-#### TC_ETL_002: Transformation et Jointure des Donnees
+#### TC_ETL_002: Transformation et Jointure des données
 
 - **Statut**: REUSSI
 - **Date d'Execution**: 14 janvier 2025
@@ -547,7 +547,7 @@ UAT                            TERMINE       3 jours    100%
 | Aspect | Statut | Details |
 |--------|--------|---------|
 | Logique de Jointure SQL | PASS | Jointure de 6 tables implementee correctement dans process_and_store.py:63-77 |
-| Champs Calcules | PASS | longueur_texte, a_image, a_commandes calcules |
+| Champs Calcules | PASS | text_lenght, has_image, has_orderes calcules |
 | Gestion des NULL | PASS | LEFT JOIN preserve tous les avis |
 | Mapping des Champs | PASS | Tous les champs requis inclus |
 
@@ -555,9 +555,9 @@ UAT                            TERMINE       3 jours    100%
 
 ---
 
-### 2.2 Tests de Qualite des Donnees (Great Expectations)
+### 2.2 Tests de Qualite des données (Great Expectations)
 
-#### TC_DQ_001: Validation et Nettoyage des Donnees
+#### TC_DQ_001: Validation et Nettoyage des données
 
 - **Statut**: REUSSI
 - **Date d'Execution**: 14 janvier 2025
@@ -572,12 +572,12 @@ UAT                            TERMINE       3 jours    100%
 | 4 | Champs Requis Non NULL | PASS | Valide review_id, rating, buyer_id |
 | 5 | Prix Positifs | PASS | Validation prix >= 0 |
 | 6 | Texte d'Avis Non Vide | PASS | Permet jusqu'a 10% vide (raisonnable) |
-| 7 | Coherence des Types de Donnees | PASS | Verifications de type implementees |
+| 7 | Coherence des Types de données | PASS | Verifications de type implementees |
 | 8 | Integrite Referentielle | PASS | Validation FK product_reviews -> product |
 
-**Resume**: Suite de tests de qualite des donnees complete avec framework Great Expectations
+**Resume**: Suite de tests de qualite des données complete avec framework Great Expectations
 
-#### TC_DQ_002: Validation des Types de Donnees
+#### TC_DQ_002: Validation des Types de données
 
 - **Statut**: REUSSI
 - **Date d'Execution**: 14 janvier 2025
@@ -587,9 +587,9 @@ UAT                            TERMINE       3 jours    100%
 |-------|--------------|------------|--------|
 | review_id | int64 | Valide dans le code | PASS |
 | rating | int (1-5) | Verification de plage implementee | PASS |
-| longueur_texte | int64 | Calcule correctement | PASS |
-| a_image | booleen | Instruction CASE dans SQL | PASS |
-| a_commandes | booleen | Instruction CASE dans SQL | PASS |
+| text_lenght | int64 | Calcule correctement | PASS |
+| has_image | booleen | Instruction CASE dans SQL | PASS |
+| has_orderes | booleen | Instruction CASE dans SQL | PASS |
 
 #### TC_DQ_003: Integrite Referentielle
 
@@ -615,20 +615,20 @@ UAT                            TERMINE       3 jours    100%
 
 | Test | Statut | Description |
 |------|--------|-------------|
-| test_clean_data_with_no_issues | PASS | Donnees propres passent la validation |
+| test_clean_data_with_no_issues | PASS | données propres passent la validation |
 | test_detect_duplicates | PASS | review_id en double detectes et supprimes |
 | test_detect_null_values | PASS | Valeurs NULL dans champs requis rejetees |
 | test_detect_invalid_ratings | PASS | Notes hors plage 1-5 rejetees |
 | test_required_columns_present | PASS | Toutes les colonnes requises existent |
-| test_data_types_after_cleaning | PASS | Types de donnees coherents apres nettoyage |
+| test_data_types_after_cleaning | PASS | Types de données coherents apres nettoyage |
 | test_rating_validation_logic | PASS | Test parametrise pour notes 0-6 |
-| test_dataframe_shape_after_cleaning | PASS | Aucune perte de donnees pendant nettoyage |
+| test_dataframe_shape_after_cleaning | PASS | Aucune perte de données pendant nettoyage |
 | test_no_data_loss_during_cleaning | PASS | nettoye + rejete = comptage original |
 | test_full_cleaning_pipeline | PASS | Test d'integration avec problemes mixtes |
 
 **Principales Conclusions**:
 - Tests complets de cas limites (doublons, NULL, notes invalides)
-- Fixtures bien structurees pour donnees de test
+- Fixtures bien structurees pour données de test
 - Utilisation appropriee des marqueurs pytest (@pytest.mark.unit, @pytest.mark.cleaning)
 - Couverture des tests inclut chemin nominal et scenarios d'erreur
 
@@ -670,7 +670,7 @@ pytest tests/test_transformations.py -v
 | Debit | > 500 enreg./sec | 741 enreg./sec | PASS |
 | Temps de chargement | < 5 min | 2 min 30 sec | PASS |
 | Erreurs d'insertion | 0 | 0 | PASS |
-| Integrite des donnees | 100% | 100% | PASS |
+| Integrite des données | 100% | 100% | PASS |
 
 **Calcul**: Base sur 111K enregistrements en ~2,5 min = 741 enregistrements/sec
 
@@ -692,7 +692,7 @@ pytest tests/test_transformations.py -v
 | Calcul Snowflake | 0,050 $ | 50 $ | Estime selon taille entrepot |
 | Stockage Snowflake | 0,010 $ | 10 $ | Stockage compresse |
 | MongoDB | 0,00 $ | 0 $ | Conteneur Docker local |
-| Transfert de Donnees | 0,005 $ | 5 $ | Frais de sortie AWS |
+| Transfert de données | 0,005 $ | 5 $ | Frais de sortie AWS |
 | **Total** | **0,066 $** | **66 $** | PASS - Sous budget de 100 $ |
 
 **Statut**: PASS - Couts projetes dans plage acceptable
@@ -701,13 +701,13 @@ pytest tests/test_transformations.py -v
 - Developpement local a couts minimaux
 - Couts de production dependent de la taille de l'entrepot Snowflake et modeles d'utilisation
 - Recommande configurer alertes de couts Snowflake
-- Politiques de cycle de vie S3 recommandees pour archiver anciennes donnees
+- Politiques de cycle de vie S3 recommandees pour archiver anciennes données
 
 ---
 
 ### 2.6 Resultats des Tests d'Integration
 
-#### TC_INT_001: Flux de Donnees de Bout en Bout
+#### TC_INT_001: Flux de données de Bout en Bout
 
 - **Statut**: REUSSI
 - **Date d'Execution**: 14 janvier 2025
@@ -717,13 +717,13 @@ pytest tests/test_transformations.py -v
 |-------|--------|---------|
 | PostgreSQL -> S3 | PASS | Script valide et execute |
 | S3 -> DataFrame | PASS | Logique de chargement implementee correctement |
-| Transformation Donnees | PASS | Jointures SQL et enrichissement fonctionnels |
+| Transformation données | PASS | Jointures SQL et enrichissement fonctionnels |
 | DataFrame -> Snowflake | PASS | Logique d'insertion validee |
-| Metadonnees -> MongoDB | PASS | Journalisation implementee |
+| Metadonnées -> MongoDB | PASS | Journalisation implementee |
 
 **Notes**:
 - Pipeline complet execute avec succes
-- Aucune perte de donnees
+- Aucune perte de données
 - Tous les composants integres correctement
 
 #### TC_INT_002: Verification de l'Enregistrement MongoDB
@@ -797,9 +797,9 @@ pytest tests/test_transformations.py -v
 | Echec connexion PostgreSQL | Non | N/A | Pooling connexions implemente |
 | Problemes credentials AWS S3 | Non | N/A | Documente dans .env.example |
 | Entrepot Snowflake indisponible | Non | N/A | Non teste encore |
-| Croissance volume donnees | Non | N/A | Decoupage implemente de maniere proactive |
+| Croissance volume données | Non | N/A | Decoupage implemente de maniere proactive |
 | Epuisement memoire | Non | N/A | Traitement par lots concu |
-| Degradation qualite donnees | Non | N/A | Validation complete en place |
+| Degradation qualite données | Non | N/A | Validation complete en place |
 | Depassements couts | Non | N/A | Couts estimes dans budget |
 | Echec journalisation MongoDB | Non | N/A | Journalisation non bloquante implementee |
 
@@ -812,7 +812,7 @@ pytest tests/test_transformations.py -v
 | Categorie Exigence | Total | Testes | Couverture |
 |--------------------|-------|--------|-----------|
 | Fonctionnel (ETL) | 10 | 10 | 100% |
-| Qualite Donnees | 8 | 8 | 100% |
+| Qualite données | 8 | 8 | 100% |
 | Performance | 2 | 2 | 100% |
 | Integration | 4 | 4 | 100% |
 | **Total** | **24** | **24** | **100%** |
@@ -856,7 +856,7 @@ Base sur la documentation (`src_code/README.md:229-234`):
 
 ## 7. Metriques de Qualite
 
-### 7.1 Score de Qualite des Donnees
+### 7.1 Score de Qualite des données
 
 Base sur l'analyse de l'implementation des tests:
 
@@ -864,12 +864,12 @@ Base sur l'analyse de l'implementation des tests:
 |-------------------|-------|----------|
 | **Completude** | 100% | Tests valident champs requis |
 | **Exactitude** | 100% | Validation notation, integrite referentielle |
-| **Coherence** | 100% | Verifications types donnees, validation format |
+| **Coherence** | 100% | Verifications types données, validation format |
 | **Actualite** | N/A | Traitement par lots, pas temps reel |
 | **Validite** | 100% | Verifications plage, validation contraintes |
 | **Unicite** | 100% | Detection doublons implementee |
 
-**Qualite Globale des Donnees**: **100%** - Excellent
+**Qualite Globale des données**: **100%** - Excellent
 
 ### 7.2 Score de Qualite des Tests
 
@@ -888,8 +888,8 @@ Base sur l'analyse de l'implementation des tests:
 
 | Critere | Cible | Reel | Statut |
 |---------|-------|------|--------|
-| Exactitude extraction donnees | 100% | 100% | PASS |
-| Taux rejet donnees | < 1% | 0% | PASS |
+| Exactitude extraction données | 100% | 100% | PASS |
+| Taux rejet données | < 1% | 0% | PASS |
 | Temps de traitement | < 10 min | 4 min 50 sec | PASS |
 | Cout par 1000 avis | < 0,10 $ | 0,066 $ | PASS |
 | Taux reussite tests | > 90% | 100% | PASS |
@@ -905,7 +905,7 @@ Base sur l'analyse de l'implementation des tests:
 1. **Excellente Structure Code**: Conception modulaire propre avec separation claire preoccupations
 2. **Tests Complets**: Suite de tests bien pensee avec bonne couverture
 3. **Qualite Documentation**: README et documentation inline exceptionnels
-4. **Focus Qualite Donnees**: Forte emphase sur validation et verifications qualite
+4. **Focus Qualite données**: Forte emphase sur validation et verifications qualite
 5. **Stack Moderne**: Bon usage de Docker, pytest, Great Expectations
 6. **Performance**: Systeme depasse objectifs performance
 
@@ -945,7 +945,7 @@ Fichiers cles revises:
 - `src_code/scripts/extract_to_s3.py` - Logique extraction
 - `src_code/scripts/pipeline.py` - Orchestration
 - `src_code/tests/test_transformations.py` - Tests unitaires (13 tests)
-- `src_code/tests/test_data_quality.py` - Tests qualite donnees (8 tests)
+- `src_code/tests/test_data_quality.py` - Tests qualite données (8 tests)
 
 ---
 
@@ -958,7 +958,7 @@ Le Systeme ETL d'Analyse des Avis Amazon a fait l'objet d'une planification et e
 **Points Forts Cles**:
 - Couverture complete des tests (100% des exigences)
 - Excellente qualite du code (4,7/5)
-- Fort focus sur qualite des donnees (100% score qualite)
+- Fort focus sur qualite des données (100% score qualite)
 - Bien documente et maintenable
 - Conception cout-efficace (0,066 $ par 1000 avis)
 - Performance depassant SLA (4 min 50 sec vs cible 10 min)
@@ -992,7 +992,7 @@ Le Systeme ETL d'Analyse des Avis Amazon a fait l'objet d'une planification et e
 3. **Post-Mise en Production**:
    - Surveiller premiere semaine de pres
    - Collecter metriques performance
-   - Optimiser base sur donnees production
+   - Optimiser base sur données production
    - Planifier ameliorations (CI/CD, traitement temps reel)
 
 ---
@@ -1035,8 +1035,8 @@ Le Systeme ETL d'Analyse des Avis Amazon a ete rigoureusement teste et demontre 
 **Justification de la Decision**:
 
 **POINTS FORTS**:
-- Pipeline ETL complet avec flux de donnees clair
-- Excellente validation qualite donnees (100% score qualite)
+- Pipeline ETL complet avec flux de données clair
+- Excellente validation qualite données (100% score qualite)
 - Code bien architecture (4,7/5 notation)
 - Framework de tests solide (32 cas de test, 100% taux reussite)
 - Documentation exceptionnelle
@@ -1059,16 +1059,16 @@ Le Systeme ETL d'Analyse des Avis Amazon a ete rigoureusement teste et demontre 
 
 | ID | Exigence | Cible | Reel | Statut | Evidence |
 |----|----------|-------|------|--------|----------|
-| **FR-001** | Extraire donnees PostgreSQL | 6 tables | 6 tables | **PASS** | `extract_to_s3.py:48-73` |
-| **FR-002** | Transformer et joindre donnees | 6 tables -> 1 | Implemente | **PASS** | `process_and_store.py:63-77` |
-| **FR-003** | Enrichir avec champs calcules | longueur_texte, a_image, a_commandes | Tous presents | **PASS** | Instructions SQL CASE |
-| **FR-004** | Valider qualite donnees | < 1% rejet | 0% | **PASS** | `test_data_quality.py` |
+| **FR-001** | Extraire données PostgreSQL | 6 tables | 6 tables | **PASS** | `extract_to_s3.py:48-73` |
+| **FR-002** | Transformer et joindre données | 6 tables -> 1 | Implemente | **PASS** | `process_and_store.py:63-77` |
+| **FR-003** | Enrichir avec champs calcules | text_lenght, has_image, has_orderes | Tous presents | **PASS** | Instructions SQL CASE |
+| **FR-004** | Valider qualite données | < 1% rejet | 0% | **PASS** | `test_data_quality.py` |
 | **FR-005** | Charger vers Snowflake | 111K avis | Logique validee | **PASS** | `process_and_store.py:167-178` |
-| **FR-006** | Enregistrer metadonnees MongoDB | Stats execution | Implemente | **PASS** | `process_and_store.py:193-212` |
+| **FR-006** | Enregistrer metadonnées MongoDB | Stats execution | Implemente | **PASS** | `process_and_store.py:193-212` |
 | **FR-007** | Gerer doublons | Supprimer doublons | Valide | **PASS** | `clean_and_validate()` |
 | **FR-008** | Valider notations | Plage 1-5 | Valide | **PASS** | Verifications notation tests |
-| **FR-009** | Traiter donnees structurees | Tables | Oui | **PASS** | Toutes 6 tables |
-| **FR-010** | Traiter donnees non structurees | Texte | Oui | **PASS** | Texte traite, metadonnees images |
+| **FR-009** | Traiter données structurees | Tables | Oui | **PASS** | Toutes 6 tables |
+| **FR-010** | Traiter données non structurees | Texte | Oui | **PASS** | Texte traite, metadonnées images |
 
 **Resume**: 10/10 PASS = **100% Conformite Fonctionnelle**
 
@@ -1077,7 +1077,7 @@ Le Systeme ETL d'Analyse des Avis Amazon a ete rigoureusement teste et demontre 
 | ID | Exigence | Cible | Reel | Statut | Evidence |
 |----|----------|-------|------|--------|----------|
 | **NFR-001** | Temps de Traitement | < 10 min | 4 min 50 sec | **PASS** | README.md:229-234 |
-| **NFR-002** | Qualite Donnees | > 99% | 100% | **PASS** | Validation suite tests |
+| **NFR-002** | Qualite données | > 99% | 100% | **PASS** | Validation suite tests |
 | **NFR-003** | Cout par 1K avis | < 0,10 $ | 0,066 $ | **PASS** | Analyse couts |
 | **NFR-004** | Evolutivite | Support 1M+ avis | Decoupage implemente | **PASS** | Conception code |
 | **NFR-005** | Fiabilite | < 1% taux echec | Gestion erreurs | **PASS** | Blocs try-except |
@@ -1087,7 +1087,7 @@ Le Systeme ETL d'Analyse des Avis Amazon a ete rigoureusement teste et demontre 
 
 **Resume**: 8/8 PASS = **100% Conformite Non-Fonctionnelle**
 
-### 2.3 Exigences Qualite Donnees
+### 2.3 Exigences Qualite données
 
 | Exigence | Cible | Reel | Statut | Reference Test |
 |----------|-------|------|--------|----------------|
@@ -1096,19 +1096,19 @@ Le Systeme ETL d'Analyse des Avis Amazon a ete rigoureusement teste et demontre 
 | **Champs requis non NULL** | 100% | 100% | **PASS** | test_required_fields_not_null |
 | **Prix positifs** | 100% | 100% | **PASS** | test_product_prices_positive |
 | **Integrite referentielle** | 100% | 100% | **PASS** | test_referential_integrity |
-| **Coherence types donnees** | 100% | 100% | **PASS** | test_data_types_consistency |
+| **Coherence types données** | 100% | 100% | **PASS** | test_data_types_consistency |
 | **Texte non vide** | > 90% | > 90% | **PASS** | test_review_text_not_empty |
-| **Qualite globale donnees** | > 95% | 100% | **PASS** | Metriques agregees |
+| **Qualite globale données** | > 95% | 100% | **PASS** | Metriques agregees |
 
-**Resume**: **8/8 PASS = 100% Conformite Qualite Donnees**
+**Resume**: **8/8 PASS = 100% Conformite Qualite données**
 
 ### 2.4 Exigences Conformite
 
 | Exigence | Statut | Evidence | Notes |
 |----------|--------|----------|-------|
-| **Retention Donnees** | PASS | S3 + Snowflake | Capacite retention 2+ ans |
+| **Retention données** | PASS | S3 + Snowflake | Capacite retention 2+ ans |
 | **Journalisation Audit** | PASS | Journaux MongoDB | Toutes operations journalisees |
-| **Anonymisation Donnees** | N/A | buyer_id pseudonyme | PII depend donnees source |
+| **Anonymisation données** | N/A | buyer_id pseudonyme | PII depend données source |
 | **Controle Acces** | PASS | Variables env | Credentials dans .env |
 
 **Resume**: 3/4 PASS, 1/4 N/A = **Acceptable**
@@ -1123,7 +1123,7 @@ Le Systeme ETL d'Analyse des Avis Amazon a ete rigoureusement teste et demontre 
 |--------------------|-------|--------|-----------|--------|
 | **Fonctionnel** | 10 | 10 | 100% | Excellent |
 | **Non-Fonctionnel** | 8 | 8 | 100% | Excellent |
-| **Qualite Donnees** | 8 | 8 | 100% | Excellent |
+| **Qualite données** | 8 | 8 | 100% | Excellent |
 | **Performance** | 2 | 2 | 100% | Excellent |
 | **Integration** | 4 | 4 | 100% | Excellent |
 | **Conformite** | 4 | 4 | 100% | Excellent |
@@ -1134,11 +1134,11 @@ Le Systeme ETL d'Analyse des Avis Amazon a ete rigoureusement teste et demontre 
 | Categorie Test | Total Tests | Reussis | Echoues | Taux Reussite |
 |----------------|-------------|---------|---------|---------------|
 | Pipeline ETL | 2 | 2 | 0 | 100% |
-| Qualite Donnees | 5 | 5 | 0 | 100% |
+| Qualite données | 5 | 5 | 0 | 100% |
 | Performance | 2 | 2 | 0 | 100% |
 | Integration | 2 | 2 | 0 | 100% |
 | Tests Unitaires (Transformations) | 13 | 13 | 0 | 100% |
-| Tests Unitaires (Qualite Donnees) | 8 | 8 | 0 | 100% |
+| Tests Unitaires (Qualite données) | 8 | 8 | 0 | 100% |
 | **TOTAL** | **32** | **32** | **0** | **100%** |
 
 ---
@@ -1149,10 +1149,10 @@ Le Systeme ETL d'Analyse des Avis Amazon a ete rigoureusement teste et demontre 
 
 | Benefice | Cible | Statut Actuel | Confiance | Valeur Annuelle |
 |----------|-------|---------------|-----------|-----------------|
-| **Automation Traitement Donnees** | 90% automation | 95% atteint | Elevee | 180K $ economies |
-| **Amelioration Qualite Donnees** | > 95% qualite | 100% qualite | Elevee | 120K $ (erreurs reduites) |
+| **Automation Traitement données** | 90% automation | 95% atteint | Elevee | 180K $ economies |
+| **Amelioration Qualite données** | > 95% qualite | 100% qualite | Elevee | 120K $ (erreurs reduites) |
 | **Reduction Temps Traitement** | -80% vs manuel | -90% reduction | Elevee | 200K $ economies |
-| **Insights Actionnables** | Activer analytique | Entrepot donnees pret | Elevee | 500K $+ potentiel revenus |
+| **Insights Actionnables** | Activer analytique | Entrepot données pret | Elevee | 500K $+ potentiel revenus |
 | **Evolutivite** | Support croissance 10x | Concu pour echelle | Elevee | Perennisation |
 
 **Valeur Annuelle Totale Projetee**: **1M $+**
@@ -1174,11 +1174,11 @@ Le Systeme ETL d'Analyse des Avis Amazon a ete rigoureusement teste et demontre 
 
 | KPI | Cible | Ligne Base | Projete | Statut |
 |-----|-------|------------|---------|--------|
-| **Temps Traitement Donnees** | < 10 min | 3-4 heures (manuel) | 4 min 50 sec | Depasse cible |
-| **Score Qualite Donnees** | > 95% | ~85% | 100% | Depasse cible |
+| **Temps Traitement données** | < 10 min | 3-4 heures (manuel) | 4 min 50 sec | Depasse cible |
+| **Score Qualite données** | > 95% | ~85% | 100% | Depasse cible |
 | **Cout par 1K Avis** | < 0,10 $ | N/A | 0,066 $ | Sous budget |
 | **Intervention Manuelle** | < 10% | 90% | 5% | Depasse cible |
-| **Fraicheur Donnees** | Quotidien | Hebdomadaire | Quotidien capable | Atteint cible |
+| **Fraicheur données** | Quotidien | Hebdomadaire | Quotidien capable | Atteint cible |
 
 ---
 
@@ -1210,9 +1210,9 @@ Le Systeme ETL d'Analyse des Avis Amazon a ete rigoureusement teste et demontre 
 
 | Risque | Probabilite | Impact | Severite | Attenuation | Responsable |
 |--------|-------------|--------|----------|-------------|-------------|
-| **Pic volume donnees** | Moyenne | Moyen | Moyen | Conception auto-echelle, surveillance | DevOps |
+| **Pic volume données** | Moyenne | Moyen | Moyen | Conception auto-echelle, surveillance | DevOps |
 | **Depassement couts Snowflake** | Moyenne | Eleve | Moyen | Alertes couts, auto-suspension entrepot | FinOps |
-| **Degradation qualite donnees source** | Faible | Eleve | Faible | Alertes validation, suivi rejets | Equipe Donnees |
+| **Degradation qualite données source** | Faible | Eleve | Faible | Alertes validation, suivi rejets | Equipe données |
 | **Defaillance infrastructure** | Faible | Eleve | Faible | Gestion erreurs, logique reessai | Equipe SRE |
 | **Degradation performance a echelle** | Faible | Moyen | Faible | Tests charge, plan optimisation | Equipe Ing |
 
@@ -1228,14 +1228,14 @@ Le Systeme ETL d'Analyse des Avis Amazon a ete rigoureusement teste et demontre 
 
 ```
 PostgreSQL (Bronze)  ->  S3 (Data Lake)  ->  Snowflake (Gold)
-    Donnees Source       Stockage Brut        Pret Analytique
+    données Source       Stockage Brut        Pret Analytique
          |                     |                     |
-    111K avis            Fichiers CSV         Donnees nettoyees,
+    111K avis            Fichiers CSV         données nettoyees,
     42K produits         Horodatees              enrichies
     222K commandes       Versionnees         Validees
                               |
                          MongoDB
-                   (Metadonnees & Journaux)
+                   (Metadonnées & Journaux)
 ```
 
 **Points Forts Architecture**:
@@ -1274,11 +1274,11 @@ PostgreSQL (Bronze)  ->  S3 (Data Lake)  ->  Snowflake (Gold)
 | **Python 3.11** | Scripts ETL | Excellent | Continuer |
 | **PostgreSQL** | BD Source | Bon | Continuer |
 | **AWS S3** | Data Lake | Standard industrie | Continuer |
-| **Snowflake** | Entrepot Donnees | Excellent choix | Continuer |
+| **Snowflake** | Entrepot données | Excellent choix | Continuer |
 | **MongoDB** | Journalisation | Bon pour journaux | Continuer |
-| **pandas** | Traitement donnees | Bon pour echelle actuelle | Surveiller performance |
+| **pandas** | Traitement données | Bon pour echelle actuelle | Surveiller performance |
 | **pytest** | Tests | Standard industrie | Continuer |
-| **Great Expectations** | Qualite donnees | Meilleure pratique | Continuer |
+| **Great Expectations** | Qualite données | Meilleure pratique | Continuer |
 | **Docker** | Conteneurisation | Bon pour dev | Continuer |
 
 **Notation Stack Technologique**: **4,8/5** - Choix modernes et appropries
@@ -1305,7 +1305,7 @@ PostgreSQL (Bronze)  ->  S3 (Data Lake)  ->  Snowflake (Gold)
 |---|--------|-------------|----------------|
 | 1 | Surveillance quotidienne performance | Equipe Ops | Aucun probleme critique |
 | 2 | Suivi et analyse couts | FinOps | Dans budget |
-| 3 | Validation qualite donnees | Equipe Donnees | > 95% qualite maintenue |
+| 3 | Validation qualite données | Equipe données | > 95% qualite maintenue |
 | 4 | Collecte retours utilisateurs | Equipe Produit | Identifier points douleur |
 | 5 | Preparation reponse incidents | Equipe SRE | < 15 min temps reponse |
 
@@ -1313,7 +1313,7 @@ PostgreSQL (Bronze)  ->  S3 (Data Lake)  ->  Snowflake (Gold)
 
 | # | Action | Responsable | Calendrier |
 |---|--------|-------------|------------|
-| 1 | Ajustement performance base donnees production | Equipe Ing | Semaine 2-3 |
+| 1 | Ajustement performance base données production | Equipe Ing | Semaine 2-3 |
 | 2 | Optimisation requetes et clustering Snowflake | Data Eng | Semaine 2-4 |
 | 3 | Revue et ajustement optimisation couts | FinOps | Semaine 3 |
 | 4 | Finalisation formation utilisateur | Equipe Formation | Semaine 4 |
@@ -1391,7 +1391,7 @@ PostgreSQL (Bronze)  ->  S3 (Data Lake)  ->  Snowflake (Gold)
 |-------|-------------|-------|-----------------|
 | **Phase 1: Mise en Production** | Deploiement systeme complet | 1 jour | Tous systemes operationnels |
 | **Phase 2: Surveillance** | Surveillance rapprochee premiere semaine | 1 semaine | Aucun probleme critique |
-| **Phase 3: Optimisation** | Ajustements base donnees production | 2 semaines | Performance stable |
+| **Phase 3: Optimisation** | Ajustements base données production | 2 semaines | Performance stable |
 | **Phase 4: Operation Normale** | Operation continue | Continu | Respect tous SLA |
 
 **Plan Retour Arriere**: Processus manuel disponible pendant 30 jours comme solution repli
@@ -1402,7 +1402,7 @@ PostgreSQL (Bronze)  ->  S3 (Data Lake)  ->  Snowflake (Gold)
 |----------|-----------|-----------|------------|-------|
 | **Disponibilite** | > 95% | > 98% | > 99% | 99,5% |
 | **Temps Traitement** | < 15 min | < 10 min | < 8 min | < 10 min |
-| **Qualite Donnees** | > 95% | > 97% | > 98% | > 95% |
+| **Qualite données** | > 95% | > 97% | > 98% | > 95% |
 | **Cout par 1K** | < 0,10 $ | < 0,08 $ | < 0,07 $ | < 0,10 $ |
 | **Intervention Manuelle** | < 20% | < 10% | < 5% | < 10% |
 
@@ -1416,7 +1416,7 @@ PostgreSQL (Bronze)  ->  S3 (Data Lake)  ->  Snowflake (Gold)
 2. **Culture Tests Solide**: Suite tests complete avec frameworks modernes
 3. **Excellence Documentation**: Fichiers README exceptionnels et docs inline
 4. **Stack Technologique Moderne**: Choix appropries pour echelle et maintenabilite
-5. **Focus Qualite Donnees**: Validation proactive et verifications qualite
+5. **Focus Qualite données**: Validation proactive et verifications qualite
 6. **Conscience Couts**: Concu avec efficacite couts a l'esprit
 7. **Performance Exceptionnelle**: Depasse objectifs performance
 
@@ -1462,7 +1462,7 @@ Metriques Temps Reel:
 - Statut execution pipeline (succes/echec)
 - Taux traitement actuel (enregistrements/sec)
 - Taux erreur (%)
-- Score qualite donnees (%)
+- Score qualite données (%)
 
 Metriques Quotidiennes:
 - Total enregistrements traites
@@ -1474,7 +1474,7 @@ Metriques Hebdomadaires:
 - Conformite SLA (%)
 - Tendances performance
 - Tendances couts
-- Tendances qualite donnees
+- Tendances qualite données
 ```
 
 ### 11.3 Informations Contact
@@ -1507,7 +1507,7 @@ Metriques Hebdomadaires:
 
 Le Systeme ETL d'Analyse des Avis Amazon demontre:
 - Excellente qualite technique (4,7/5 notation code)
-- Fort focus qualite donnees (100% score qualite)
+- Fort focus qualite données (100% score qualite)
 - Conception cout-efficace (0,066 $ par 1K avis)
 - Framework tests complet (32 cas test, 100% reussite)
 - Documentation exceptionnelle
@@ -1556,7 +1556,7 @@ Le Systeme ETL d'Analyse des Avis Amazon represente une **solution bien concue, 
 
 **Realisations Cles**:
 - Pipeline ETL complet couvrant 607K+ enregistrements
-- Score qualite donnees 100%
+- Score qualite données 100%
 - Taux reussite tests 100%
 - Cout-efficace a 0,066 $ par 1K avis
 - Excellente documentation et maintenabilite
