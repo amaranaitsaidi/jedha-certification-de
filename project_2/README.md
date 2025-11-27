@@ -6,6 +6,11 @@ Pipeline ETL automatisé pour extraire, transformer et charger les données d'av
 
 ## Démarrage Rapide (3 étapes)
 
+### Docker
+```bash
+# Créer le réseau docker
+docker network create review-analysis-network
+
 ### 1. Démarrer les bases de données
 
 ```bash
@@ -15,10 +20,17 @@ docker-compose -f docker-compose.postgres.yml up -d
 # MongoDB (stocke les métadonnées du pipeline)
 cd src_code
 docker-compose -f docker-compose.mongodb.yml up -d
+
+## 1/ Démarrage avec Airflow
+
+# Container Airflow
+docker-compose -f docker-compose.airflow.yml up -d
+
 cd ..
 ```
 
 **Attendre 1-2 minutes** pour que PostgreSQL initialise les données (première fois uniquement).
+**Attendre 1-2 minutes** pour le démarrage d'Airflow.
 
 ### 2. Configurer les credentials
 
@@ -28,6 +40,34 @@ cp .env.example .env
 # Éditer .env avec vos credentials AWS et Snowflake
 # PostgreSQL et MongoDB sont déjà configurés pour Docker
 ```
+**Configuration Airflow**
+**Option 1 : Vous définissez vos connexions dans le docker compose Airflow**
+**Option 2 : Vous définissez vos connexions dans la plateforme Airflow**
+## information pour l'option 2 ->
+Se rendre dans Admin -> Connections -> Add a new record
+
+**aws_default** Pour Amazon S3
+Connection Id : aws_default
+Connection Type : Amazon Web Services
+AWS Access Key ID : add your key ID
+AWS Secret Access Key : add your Secret acces key
+
+**postgres_source** Pour Postgresql Source
+Connection Id : postgres_source
+Connection Type : Postgres
+Host : Container_name
+Database : your database
+Login : your login
+password : your password
+Port : 5432 (Port interne)
+
+### Démarrage 
+Une fois le container Airflow lancé, les DAGs se déclencheront seuls.
+- Les logs sont enregistrés dans Mongodb.
+- Les rejets sont enregistrés dans Mongodb.
+- Les données cleans sont enregistrées dans Snowflake.
+
+## 2/ Démarrage sans Airflow
 
 ### 3. Lancer le pipeline
 
