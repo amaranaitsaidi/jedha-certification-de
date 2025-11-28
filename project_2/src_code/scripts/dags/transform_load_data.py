@@ -62,10 +62,12 @@ with DAG(
         logger.info(f"DEBUG -> S3 paths pulled from XCom : {s3_paths}")
 
         if not s3_paths:
-            #bucket = "dyhiabucket"
-            bucket = os.getenv('AWS_S3_BUCKET')
-            #raise ValueError("No S3 paths received from extract DAG")
-            s3_paths = { 
+            # Get bucket from Airflow connection
+            aws_conn = BaseHook.get_connection("aws_s3_default")
+            bucket = aws_conn.extra_dejson.get("bucket_name", "a-ns-bucket")
+            logger.info(f"Using S3 bucket from connection: {bucket}")
+
+            s3_paths = {
             'product': f"s3://{bucket}/raw/product/product.csv",
             'category': f"s3://{bucket}/raw/category/category.csv",
             'review': f"s3://{bucket}/raw/review/review.csv",
@@ -92,7 +94,7 @@ with DAG(
     # -------------------------------------------------------
     def load_from_s3(**context):
         s3_paths = context["ti"].xcom_pull(task_ids="fetch_s3_paths")
-        processor = ReviewProcessor(aws_conn_id="aws_default", snowflake_conn_id="snowflake_conn")
+        processor = ReviewProcessor(aws_conn_id="aws_s3_default", snowflake_conn_id="snowflake_conn")
         tables = processor.load_all_tables(s3_paths)
         return tables
 
@@ -109,7 +111,7 @@ with DAG(
     # -------------------------------------------------------
     def join_step(**context):
         tables = context["ti"].xcom_pull(task_ids="load_tables_from_s3")
-        processor = ReviewProcessor(aws_conn_id="aws_default", snowflake_conn_id="snowflake_conn")
+        processor = ReviewProcessor(aws_conn_id="aws_s3_default", snowflake_conn_id="snowflake_conn")
         merged = processor.join_tables(tables)
         return merged.to_dict()
 
@@ -128,7 +130,7 @@ with DAG(
         merged_dict = context["ti"].xcom_pull(task_ids="join_tables")
         df_joined = pd.DataFrame(merged_dict)
 
-        processor = ReviewProcessor(aws_conn_id="aws_default", snowflake_conn_id="snowflake_conn")
+        processor = ReviewProcessor(aws_conn_id="aws_s3_default", snowflake_conn_id="snowflake_conn")
         df_clean, df_rejected = processor.clean_and_validate(df_joined)
 
         return {
@@ -151,7 +153,7 @@ with DAG(
         data = context["ti"].xcom_pull(task_ids="clean_and_validate")
         df_clean = pd.DataFrame(data["clean"])
 
-        processor = ReviewProcessor(aws_conn_id="aws_default", snowflake_conn_id="snowflake_conn")
+        processor = ReviewProcessor(aws_conn_id="aws_s3_default", snowflake_conn_id="snowflake_conn")
         return processor.save_to_snowflake(df_clean)
 
 
@@ -169,7 +171,7 @@ with DAG(
         data = context["ti"].xcom_pull(task_ids="clean_and_validate")
         df_rejected = pd.DataFrame(data["rejected"])
 
-        processor = ReviewProcessor(aws_conn_id="aws_default", snowflake_conn_id="snowflake_conn")
+        processor = ReviewProcessor(aws_conn_id="aws_s3_default", snowflake_conn_id="snowflake_conn")
         return processor.save_rejected_to_mongodb(df_rejected)
 
 
@@ -191,7 +193,7 @@ with DAG(
             "mongodb_inserts": ti.xcom_pull(task_ids="load_rejected_to_mongodb"),
         }
 
-        processor = ReviewProcessor(aws_conn_id="aws_default", snowflake_conn_id="snowflake_conn")
+        processor = ReviewProcessor(aws_conn_id="aws_s3_default", snowflake_conn_id="snowflake_conn")
         processor.save_metadata_to_mongodb(stats)
 
 

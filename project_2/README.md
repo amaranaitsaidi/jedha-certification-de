@@ -4,70 +4,94 @@ Pipeline ETL automatisé pour extraire, transformer et charger les données d'av
 
 > 🚀 **Nouveau sur le projet ?** Consultez [QUICKSTART.md](QUICKSTART.md) pour démarrer en 5 minutes !
 
-## Démarrage Rapide (3 étapes)
+## Démarrage Rapide
 
-### Docker
+### 1️⃣ Démarrage de l'infrastructure Docker
+
 ```bash
-# Créer le réseau docker
+# 1. Créer le réseau Docker (une seule fois)
 docker network create review-analysis-network
 
-### 1. Démarrer les bases de données
-
-```bash
-# PostgreSQL (contient les données source)
+# 2. PostgreSQL (contient les données source - initialisation automatique)
 docker-compose -f docker-compose.postgres.yml up -d
 
-# MongoDB (stocke les métadonnées du pipeline)
-cd src_code
+# 3. MongoDB (stocke les logs et données rejetées)
 docker-compose -f docker-compose.mongodb.yml up -d
 
-## 1/ Démarrage avec Airflow
-
-# Container Airflow
+# 4. Airflow (orchestration du pipeline ETL)
 docker-compose -f docker-compose.airflow.yml up -d
-
-cd ..
 ```
 
-**Attendre 1-2 minutes** pour que PostgreSQL initialise les données (première fois uniquement).
-**Attendre 1-2 minutes** pour le démarrage d'Airflow.
+**⏱️ Temps de démarrage:**
+- PostgreSQL: 1-2 minutes (initialisation automatique des données au premier lancement)
+- Airflow: 1-2 minutes (initialisation de la base de données Airflow)
 
-### 2. Configurer les credentials
+### 2️⃣ Configuration des credentials
 
+**Créer le fichier `.env` à la racine:**
 ```bash
-cd src_code
 cp .env.example .env
 # Éditer .env avec vos credentials AWS et Snowflake
+```
+
+**Variables obligatoires dans `.env`:**
+```bash
+# AWS S3
+AWS_ACCESS_KEY_ID=votre_access_key
+AWS_SECRET_ACCESS_KEY=votre_secret_key
+AWS_S3_BUCKET=votre-bucket
+AWS_REGION=eu-west-1
+
+# Snowflake
+SNOWFLAKE_USER=votre_user
+SNOWFLAKE_PASSWORD=votre_password
+SNOWFLAKE_ACCOUNT=votre_account
+SNOWFLAKE_DATABASE=AMAZON_REVIEWS
+SNOWFLAKE_SCHEMA=ANALYTICS
+SNOWFLAKE_WAREHOUSE=COMPUTE_WH
+SNOWFLAKE_ROLE=ACCOUNTADMIN
+
 # PostgreSQL et MongoDB sont déjà configurés pour Docker
 ```
-**Configuration Airflow**
-**Option 1 : Vous définissez vos connexions dans le docker compose Airflow**
-**Option 2 : Vous définissez vos connexions dans la plateforme Airflow**
-## information pour l'option 2 ->
-Se rendre dans Admin -> Connections -> Add a new record
 
-**aws_default** Pour Amazon S3
-Connection Id : aws_default
-Connection Type : Amazon Web Services
-AWS Access Key ID : add your key ID
-AWS Secret Access Key : add your Secret acces key
+### 3️⃣ Configuration Airflow (IMPORTANT!)
 
-**postgres_source** Pour Postgresql Source
-Connection Id : postgres_source
-Connection Type : Postgres
-Host : Container_name
-Database : your database
-Login : your login
-password : your password
-Port : 5432 (Port interne)
+**Créer les variables Airflow pour AWS** (évite les problèmes d'encodage):
+```bash
+docker exec airflow-webserver airflow variables set AWS_ACCESS_KEY_ID "VOTRE_ACCESS_KEY"
+docker exec airflow-webserver airflow variables set AWS_SECRET_ACCESS_KEY "VOTRE_SECRET_KEY"
+docker exec airflow-webserver airflow variables set AWS_REGION "eu-west-1"
+docker exec airflow-webserver airflow variables set AWS_S3_BUCKET "votre-bucket"
+```
 
-### Démarrage 
-Une fois le container Airflow lancé, les DAGs se déclencheront seuls.
-- Les logs sont enregistrés dans Mongodb.
-- Les rejets sont enregistrés dans Mongodb.
-- Les données cleans sont enregistrées dans Snowflake.
+### 4️⃣ Lancer le pipeline
 
-## 2/ Démarrage sans Airflow
+**Activer les DAGs (une seule fois):**
+```bash
+docker exec airflow-webserver airflow dags unpause main_orchestrator
+docker exec airflow-webserver airflow dags unpause extract_postgres_to_s3
+docker exec airflow-webserver airflow dags unpause transform_load_data
+```
+
+**Déclencher le pipeline complet:**
+```bash
+docker exec airflow-webserver airflow dags trigger main_orchestrator
+```
+
+**Le pipeline exécutera automatiquement:**
+1. ✅ Initialisation MongoDB (collections + indexes)
+2. ✅ Initialisation Snowflake (database + schema + tables)
+3. ✅ Extraction PostgreSQL → S3 (8 tables, anonymisation buyer_id)
+4. ✅ Transformation et chargement → Snowflake + MongoDB
+
+**Monitoring:**
+- **Interface Airflow**: http://localhost:8080 (login: admin / password: admin)
+- **MongoDB UI**: http://localhost:8081
+- **Logs en temps réel**: `docker logs -f airflow-scheduler`
+
+---
+
+## Alternative: Démarrage sans Airflow
 
 ### 3. Lancer le pipeline
 
@@ -98,19 +122,30 @@ PostgreSQL (Docker)    →    AWS S3    →    Snowflake
 ```
 project_2/
 ├── README.md                              ← Vous êtes ici
-├── docker-compose.postgres.yml            ← Base de données PostgreSQL
-├── .env.local                             ← Config PostgreSQL
+├── .env                                   ← Configuration centrale (AWS, Snowflake, etc.)
+├── .env.example                           ← Template de configuration
+│
+├── docker-compose.postgres.yml            ← PostgreSQL (données source)
+├── docker-compose.mongodb.yml             ← MongoDB (logs & rejets)
+├── docker-compose.airflow.yml             ← Airflow (orchestration)
+│
 ├── data/
-│   └── clean/                             ← Données CSV (utilisées par Docker)
-├── docker/postgres/init/                  ← Scripts d'initialisation DB
-└── src_code/                              ← Code du pipeline ETL
+│   └── clean/                             ← Données CSV (auto-chargées dans PostgreSQL)
+├── docker/postgres/init/                  ← Scripts d'initialisation PostgreSQL
+│
+└── src_code/
     ├── README.md                          ← Documentation détaillée du pipeline
-    ├── docker-compose.mongodb.yml         ← Base MongoDB
-    ├── .env                               ← Configuration du pipeline
-    ├── scripts/                           ← Scripts Python du pipeline
-    │   ├── pipeline.py                    ← Script principal
+    ├── scripts/
+    │   ├── pipeline.py                    ← Pipeline manuel (sans Airflow)
     │   ├── extract_to_s3.py               ← Extraction PostgreSQL → S3
-    │   └── process_and_store.py           ← Traitement et stockage
+    │   ├── process_and_store.py           ← Traitement et stockage
+    │   └── dags/                          ← DAGs Airflow
+    │       ├── main_orchestrator_dag.py   ← DAG principal
+    │       ├── extract_to_s3.py           ← DAG extraction
+    │       ├── transform_load_data.py     ← DAG transformation
+    │       └── utils/                     ← Utilitaires DAGs
+    │           ├── mongo_handler.py       ← Gestionnaire MongoDB
+    │           └── review_processor.py    ← Processeur de données
     └── config/                            ← Fichiers de configuration
 ```
 
@@ -122,13 +157,44 @@ project_2/
 # Voir les conteneurs en cours
 docker ps
 
-# Arrêter tout
+# Arrêter tous les services
+docker-compose -f docker-compose.airflow.yml down
+docker-compose -f docker-compose.mongodb.yml down
 docker-compose -f docker-compose.postgres.yml down
-cd src_code && docker-compose -f docker-compose.mongodb.yml down
+
+# Redémarrer un service spécifique
+docker-compose -f docker-compose.airflow.yml restart
 
 # Réinitialiser PostgreSQL (supprime les données)
 docker-compose -f docker-compose.postgres.yml down -v
 docker-compose -f docker-compose.postgres.yml up -d
+```
+
+### Commandes Airflow
+
+```bash
+# Lister les DAGs
+docker exec airflow-webserver airflow dags list
+
+# Voir l'état d'un DAG
+docker exec airflow-webserver airflow dags list-runs -d main_orchestrator
+
+# Activer/Désactiver un DAG
+docker exec airflow-webserver airflow dags unpause main_orchestrator
+docker exec airflow-webserver airflow dags pause main_orchestrator
+
+# Déclencher un DAG manuellement
+docker exec airflow-webserver airflow dags trigger main_orchestrator
+
+# Voir les tâches d'un DAG run
+docker exec airflow-webserver airflow tasks states-for-dag-run transform_load_data <run_id>
+
+# Lister les variables Airflow
+docker exec airflow-webserver airflow variables list
+
+# Voir les logs
+docker logs -f airflow-scheduler
+docker logs -f airflow-webserver
 ```
 
 ### Vérifier les connexions
@@ -139,6 +205,9 @@ docker exec -it amazon_postgres_db psql -U admin -d amazon_db -c "SELECT COUNT(*
 
 # MongoDB
 docker exec -it amazon-reviews-mongodb mongosh -u admin -p changeme --eval "db.adminCommand('ping')"
+
+# Airflow (vérifier qu'il est prêt)
+docker exec airflow-webserver airflow db check
 ```
 
 ## Données Disponibles
@@ -185,11 +254,13 @@ Les rapports sont disponibles dans `src_code/reports/` (JSON + HTML).
 
 ## Technologies
 
+- **Orchestration** : Apache Airflow 2.8.3 (Docker)
 - **Source** : PostgreSQL 17 (Docker)
 - **Data Lake** : AWS S3
 - **Data Warehouse** : Snowflake
-- **Logs** : MongoDB (Docker)
-- **ETL** : Python 3.11+
+- **Logs & Rejets** : MongoDB 7.0 (Docker)
+- **ETL** : Python 3.11+ avec pandas, boto3, snowflake-connector
+- **Conteneurisation** : Docker & Docker Compose
 
 ## Support
 

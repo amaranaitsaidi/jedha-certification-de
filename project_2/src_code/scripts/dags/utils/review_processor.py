@@ -124,7 +124,28 @@ class ReviewProcessor:
         key = parts[1]
         logger.info(f"DEBUG ---> Loading from S3 bucket: {bucket}, key: {key}")
 
-        file_content = self.s3_hook.read_key(key=key, bucket_name=bucket)
+        # Use boto3 directly with credentials from Airflow Variables to avoid URL encoding issues
+        import boto3
+        from airflow.models import Variable
+
+        aws_access_key_id = Variable.get("AWS_ACCESS_KEY_ID", default_var=None)
+        aws_secret_access_key = Variable.get("AWS_SECRET_ACCESS_KEY", default_var=None)
+        region_name = Variable.get("AWS_REGION", default_var="eu-west-1")
+
+        if aws_access_key_id and aws_secret_access_key:
+            logger.info("Using AWS credentials from Airflow Variables")
+            s3_client = boto3.client(
+                's3',
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key,
+                region_name=region_name
+            )
+            response = s3_client.get_object(Bucket=bucket, Key=key)
+            file_content = response['Body'].read().decode('utf-8')
+        else:
+            logger.info("Falling back to S3Hook")
+            file_content = self.s3_hook.read_key(key=key, bucket_name=bucket)
+
         csv_buffer = StringIO(file_content)
         df = pd.read_csv(csv_buffer)
         logger.info(f"  [OK] Loaded {len(df):,} rows from {s3_uri}")
@@ -274,8 +295,6 @@ class ReviewProcessor:
         df_clean = df_clean[(df_clean['rating'] >= 1) & (df_clean['rating'] <= 5)]
         logger.info(f"  [OK] Removed {len(invalid_rating)} records with invalid rating")
 
-        # 4. Reject empty or null descriptions
-
         empty_description = df_clean['description'].isnull() | (df_clean['description'].str.strip().str.len() == 0)
         empty_description_records = df_clean[empty_description]
 
@@ -291,7 +310,7 @@ class ReviewProcessor:
         df_clean = df_clean[~empty_description]
         logger.info(f"  [OK] Removed {len(empty_description_records)} records with empty/null description")
 
-        # 5. Fill missing values
+        # 4. Fill missing values
         df_clean['title'] = df_clean['title'].fillna('')
         df_clean['description'] = df_clean['description'].fillna('')
         df_clean['category'] = df_clean['category'].fillna('Unknown')
@@ -353,6 +372,11 @@ class ReviewProcessor:
         logger.info("Debug Snowflake connection:" + str(self.snowflake_conn))
 
         cursor = self.snowflake_conn.cursor()
+
+        # TRUNCATE table to avoid duplicates (anonymization creates different hashes each run)
+        logger.info("Truncating existing data in Snowflake reviews table...")
+        cursor.execute("TRUNCATE TABLE reviews")
+        logger.info("  [OK] Table truncated")
 
         # Prepare data
         df_to_insert = df.copy()
@@ -430,7 +454,7 @@ class ReviewProcessor:
             return 0
 
          # Init client if needed
-        if not hasattr(self, "mongo_client") or self.mongo_conn is None:
+        if not hasattr(self, "mongo_conn") or self.mongo_conn is None:
             self._init_mongodb()
 
         logger.info("Saving rejected records to MongoDB...")
@@ -446,6 +470,38 @@ class ReviewProcessor:
         logger.info(f"  [OK] Inserted {len(result.inserted_ids)} rejected records to MongoDB")
 
         return len(result.inserted_ids)
+
+    def save_metadata_to_mongodb(self, stats: dict) -> int:
+        """
+        Save pipeline metadata to MongoDB.
+
+        Args:
+            stats: Dictionary with pipeline statistics
+
+        Returns:
+            Number of documents inserted
+        """
+        # Init client if needed
+        if not hasattr(self, "mongo_conn") or self.mongo_conn is None:
+            self._init_mongodb()
+
+        logger.info("Saving pipeline metadata to MongoDB...")
+
+        db = self.mongo_conn["amazon_reviews"]
+        collection = db["pipeline_metadata"]
+
+        metadata = {
+            "run_id": self.run_id,
+            "pipeline_version": self.pipeline_version,
+            "execution_timestamp": datetime.now(),
+            "statistics": stats
+        }
+
+        result = collection.insert_one(metadata)
+
+        logger.info(f"  [OK] Saved pipeline metadata to MongoDB")
+
+        return 1 if result.inserted_id else 0
 
     # ========================================
     # MAIN PROCESS
