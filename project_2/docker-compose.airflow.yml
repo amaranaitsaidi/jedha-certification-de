@@ -11,7 +11,7 @@ services:
     ports:
       - "5434:5432" 
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - ./src_code/scripts/data/postgres:/var/lib/postgresql/data
     networks:
       - review-analysis-network
 
@@ -26,26 +26,25 @@ services:
     container_name: airflow-init
     depends_on:
       - airflow-postgres
-    env_file:
-      - ../../.env
     environment:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
 
       # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW ------------
       AIRFLOW_CONN_PG_AMAZON: "postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin123}@amazon_postgres_db:5432/${POSTGRES_DB:-amazon_db}"
-      AIRFLOW_CONN_AWS_S3_DEFAULT: "aws://?aws_access_key_id=${AWS_ACCESS_KEY}&aws_secret_access_key=${AWS_SECRET_KEY}&region_name=${AWS_REGION:-eu-west-3}&bucket_name=${AWS_S3_BUCKET}"
+      # AWS connection configured via CLI to avoid URL encoding issues
+      # AIRFLOW_CONN_AWS_S3_DEFAULT: "aws://?aws_access_key_id=${AWS_ACCESS_KEY}&aws_secret_access_key=${AWS_SECRET_KEY}&region_name=${AWS_REGION:-eu-west-3}&bucket_name=${AWS_S3_BUCKET}"
       AIRFLOW_CONN_MONGO: "mongodb://${MONGO_USER:-admin}:${MONGODB_PASSWORD:-changeme}@mongodb:27017/"
       AIRFLOW_CONN_SNOWFLAKE_CONN: "snowflake://${SNOWFLAKE_USER}:${SNOWFLAKE_PASSWORD}@${SNOWFLAKE_ACCOUNT}/${SNOWFLAKE_DB}/${SNOWFLAKE_SCHEMA}?warehouse=${SNOWFLAKE_WH}&role=${SNOWFLAKE_ROLE}"
       # ----------------------------------------------------------
     
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
-      - ./requirements_airflow.txt:/requirements.txt
+      - ./src_code/scripts/dags:/opt/airflow/dags
+      - ./src_code/scripts/logs:/opt/airflow/logs
+      - ./src_code/scripts/plugins:/opt/airflow/plugins
+      - ./src_code/scripts/requirements_airflow.txt:/requirements.txt
     entrypoint: /bin/bash
-    command: -c bash "pip install -r /requirements.txt && airflow db init && airflow users create --username ${AIRFLOW_INITIAL_ADMIN_USER:-admin} --password ${AIRFLOW_INITIAL_ADMIN_PASSWORD:-admin} --firstname Airflow --lastname Admin --role Admin --email admin@example.com"
+    command: -c "pip install -r /requirements.txt && airflow db init && airflow users create --username ${AIRFLOW_INITIAL_ADMIN_USER:-admin} --password ${AIRFLOW_INITIAL_ADMIN_PASSWORD:-admin} --firstname Airflow --lastname Admin --role Admin --email admin@example.com"
     networks:
       - review-analysis-network
 
@@ -55,8 +54,6 @@ services:
     depends_on:
       - airflow-postgres
       - redis
-    env_file:
-      - ../../.env
     environment:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
       AIRFLOW__CORE__FERNET_KEY: ""
@@ -66,16 +63,17 @@ services:
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
     # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW ------------
       AIRFLOW_CONN_PG_AMAZON: "postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin123}@amazon_postgres_db:5432/${POSTGRES_DB:-amazon_db}"
-      AIRFLOW_CONN_AWS_S3_DEFAULT: "aws://?aws_access_key_id=${AWS_ACCESS_KEY}&aws_secret_access_key=${AWS_SECRET_KEY}&region_name=${AWS_REGION:-eu-west-3}&bucket_name=${AWS_S3_BUCKET}"
+      # AWS connection configured via CLI to avoid URL encoding issues
+      # AIRFLOW_CONN_AWS_S3_DEFAULT: "aws://?aws_access_key_id=${AWS_ACCESS_KEY}&aws_secret_access_key=${AWS_SECRET_KEY}&region_name=${AWS_REGION:-eu-west-3}&bucket_name=${AWS_S3_BUCKET}"
       AIRFLOW_CONN_MONGO: "mongodb://${MONGO_USER:-admin}:${MONGODB_PASSWORD:-changeme}@mongodb:27017/"
       AIRFLOW_CONN_SNOWFLAKE_CONN: "snowflake://${SNOWFLAKE_USER}:${SNOWFLAKE_PASSWORD}@${SNOWFLAKE_ACCOUNT}/${SNOWFLAKE_DB}/${SNOWFLAKE_SCHEMA}?warehouse=${SNOWFLAKE_WH}&role=${SNOWFLAKE_ROLE}"
     # ----------------------------------------------------------
 
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
-      - ./requirements_airflow.txt:/requirements.txt
+      - ./src_code/scripts/dags:/opt/airflow/dags
+      - ./src_code/scripts/logs:/opt/airflow/logs
+      - ./src_code/scripts/plugins:/opt/airflow/plugins
+      - ./src_code/scripts/requirements_airflow.txt:/requirements.txt
     ports:
       - "8080:8080"
     command: bash -c "pip install -r /requirements.txt && airflow webserver"
@@ -87,8 +85,6 @@ services:
     container_name: airflow-scheduler
     depends_on:
       - airflow-webserver
-    env_file:
-      - ../../.env
     environment:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
@@ -97,16 +93,17 @@ services:
     
       # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW ------------
       AIRFLOW_CONN_PG_AMAZON: "postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin123}@amazon_postgres_db:5432/${POSTGRES_DB:-amazon_db}"
-      AIRFLOW_CONN_AWS_S3_DEFAULT: "aws://?aws_access_key_id=${AWS_ACCESS_KEY}&aws_secret_access_key=${AWS_SECRET_KEY}&region_name=${AWS_REGION:-eu-west-3}&bucket_name=${AWS_S3_BUCKET}"
+      # AWS connection configured via CLI to avoid URL encoding issues
+      # AIRFLOW_CONN_AWS_S3_DEFAULT: "aws://?aws_access_key_id=${AWS_ACCESS_KEY}&aws_secret_access_key=${AWS_SECRET_KEY}&region_name=${AWS_REGION:-eu-west-3}&bucket_name=${AWS_S3_BUCKET}"
       AIRFLOW_CONN_MONGO: "mongodb://${MONGO_USER:-admin}:${MONGODB_PASSWORD:-changeme}@mongodb:27017/"
       AIRFLOW_CONN_SNOWFLAKE_CONN: "snowflake://${SNOWFLAKE_USER}:${SNOWFLAKE_PASSWORD}@${SNOWFLAKE_ACCOUNT}/${SNOWFLAKE_DB}/${SNOWFLAKE_SCHEMA}?warehouse=${SNOWFLAKE_WH}&role=${SNOWFLAKE_ROLE}"
       # ----------------------------------------------------------
 
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
-      - ./requirements_airflow.txt:/requirements.txt
+      - ./src_code/scripts/dags:/opt/airflow/dags
+      - ./src_code/scripts/logs:/opt/airflow/logs
+      - ./src_code/scripts/plugins:/opt/airflow/plugins
+      - ./src_code/scripts/requirements_airflow.txt:/requirements.txt
     command: bash -c "pip install -r /requirements.txt && airflow scheduler"
     networks:
       - review-analysis-network
@@ -117,8 +114,6 @@ services:
     container_name: airflow-worker
     depends_on:
       - airflow-scheduler
-    env_file:
-      - ../../.env
     environment:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
@@ -127,15 +122,16 @@ services:
       
       # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW ------------
       AIRFLOW_CONN_PG_AMAZON: "postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin123}@amazon_postgres_db:5432/${POSTGRES_DB:-amazon_db}"
-      AIRFLOW_CONN_AWS_S3_DEFAULT: "aws://?aws_access_key_id=${AWS_ACCESS_KEY}&aws_secret_access_key=${AWS_SECRET_KEY}&region_name=${AWS_REGION:-eu-west-3}&bucket_name=${AWS_S3_BUCKET}"
+      # AWS connection configured via CLI to avoid URL encoding issues
+      # AIRFLOW_CONN_AWS_S3_DEFAULT: "aws://?aws_access_key_id=${AWS_ACCESS_KEY}&aws_secret_access_key=${AWS_SECRET_KEY}&region_name=${AWS_REGION:-eu-west-3}&bucket_name=${AWS_S3_BUCKET}"
       AIRFLOW_CONN_MONGO: "mongodb://${MONGO_USER:-admin}:${MONGODB_PASSWORD:-changeme}@mongodb:27017/"
       AIRFLOW_CONN_SNOWFLAKE_CONN: "snowflake://${SNOWFLAKE_USER}:${SNOWFLAKE_PASSWORD}@${SNOWFLAKE_ACCOUNT}/${SNOWFLAKE_DB}/${SNOWFLAKE_SCHEMA}?warehouse=${SNOWFLAKE_WH}&role=${SNOWFLAKE_ROLE}"
       # ----------------------------------------------------------
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
-      - ./requirements_airflow.txt:/requirements.txt
+      - ./src_code/scripts/dags:/opt/airflow/dags
+      - ./src_code/scripts/logs:/opt/airflow/logs
+      - ./src_code/scripts/plugins:/opt/airflow/plugins
+      - ./src_code/scripts/requirements_airflow.txt:/requirements.txt
     command: bash -c "pip install -r /requirements.txt && airflow celery worker"
     networks:
       - review-analysis-network
