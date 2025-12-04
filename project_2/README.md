@@ -54,15 +54,9 @@ SNOWFLAKE_ROLE=ACCOUNTADMIN
 # PostgreSQL et MongoDB sont déjà configurés pour Docker
 ```
 
-### 3️⃣ Configuration Airflow (IMPORTANT!)
+### 3️⃣ Configuration Airflow
 
-**Créer les variables Airflow pour AWS** (évite les problèmes d'encodage):
-```bash
-docker exec airflow-webserver airflow variables set AWS_ACCESS_KEY_ID "VOTRE_ACCESS_KEY"
-docker exec airflow-webserver airflow variables set AWS_SECRET_ACCESS_KEY "VOTRE_SECRET_KEY"
-docker exec airflow-webserver airflow variables set AWS_REGION "eu-west-1"
-docker exec airflow-webserver airflow variables set AWS_S3_BUCKET "votre-bucket"
-```
+Les connexions Airflow (PostgreSQL, MongoDB, Snowflake, AWS S3) sont **automatiquement configurées** via les variables d'environnement définies dans le fichier `.env` (format `AIRFLOW_CONN_*`). Aucune configuration manuelle n'est nécessaire.
 
 ### 4️⃣ Lancer le pipeline
 

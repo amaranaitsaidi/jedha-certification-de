@@ -30,13 +30,12 @@ services:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
 
-      # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW ------------
-      AIRFLOW_CONN_PG_AMAZON: "postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin123}@amazon_postgres_db:5432/${POSTGRES_DB:-amazon_db}"
-      # AWS connection configured via CLI to avoid URL encoding issues
-      # AIRFLOW_CONN_AWS_S3_DEFAULT: "aws://?aws_access_key_id=${AWS_ACCESS_KEY}&aws_secret_access_key=${AWS_SECRET_KEY}&region_name=${AWS_REGION:-eu-west-3}&bucket_name=${AWS_S3_BUCKET}"
-      AIRFLOW_CONN_MONGO: "mongodb://${MONGO_USER:-admin}:${MONGODB_PASSWORD:-changeme}@mongodb:27017/"
-      AIRFLOW_CONN_SNOWFLAKE_CONN: "snowflake://${SNOWFLAKE_USER}:${SNOWFLAKE_PASSWORD}@${SNOWFLAKE_ACCOUNT}/${SNOWFLAKE_DB}/${SNOWFLAKE_SCHEMA}?warehouse=${SNOWFLAKE_WH}&role=${SNOWFLAKE_ROLE}"
-      # ----------------------------------------------------------
+      # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW (via .env) ------------
+      AIRFLOW_CONN_PG_AMAZON: ${AIRFLOW_CONN_PG_AMAZON}
+      AIRFLOW_CONN_AWS_S3_DEFAULT: ${AIRFLOW_CONN_AWS_S3_DEFAULT}
+      AIRFLOW_CONN_MONGO: ${AIRFLOW_CONN_MONGO}
+      AIRFLOW_CONN_SNOWFLAKE_CONN: ${AIRFLOW_CONN_SNOWFLAKE_CONN}
+      # --------------------------------------------------------------------
     
     volumes:
       - ./src_code/scripts/dags:/opt/airflow/dags
@@ -61,13 +60,13 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
       AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
-    # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW ------------
-      AIRFLOW_CONN_PG_AMAZON: "postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin123}@amazon_postgres_db:5432/${POSTGRES_DB:-amazon_db}"
-      # AWS connection configured via CLI to avoid URL encoding issues
-      # AIRFLOW_CONN_AWS_S3_DEFAULT: "aws://?aws_access_key_id=${AWS_ACCESS_KEY}&aws_secret_access_key=${AWS_SECRET_KEY}&region_name=${AWS_REGION:-eu-west-3}&bucket_name=${AWS_S3_BUCKET}"
-      AIRFLOW_CONN_MONGO: "mongodb://${MONGO_USER:-admin}:${MONGODB_PASSWORD:-changeme}@mongodb:27017/"
-      AIRFLOW_CONN_SNOWFLAKE_CONN: "snowflake://${SNOWFLAKE_USER}:${SNOWFLAKE_PASSWORD}@${SNOWFLAKE_ACCOUNT}/${SNOWFLAKE_DB}/${SNOWFLAKE_SCHEMA}?warehouse=${SNOWFLAKE_WH}&role=${SNOWFLAKE_ROLE}"
-    # ----------------------------------------------------------
+
+      # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW (via .env) ------------
+      AIRFLOW_CONN_PG_AMAZON: ${AIRFLOW_CONN_PG_AMAZON}
+      AIRFLOW_CONN_AWS_S3_DEFAULT: ${AIRFLOW_CONN_AWS_S3_DEFAULT}
+      AIRFLOW_CONN_MONGO: ${AIRFLOW_CONN_MONGO}
+      AIRFLOW_CONN_SNOWFLAKE_CONN: ${AIRFLOW_CONN_SNOWFLAKE_CONN}
+      # --------------------------------------------------------------------
 
     volumes:
       - ./src_code/scripts/dags:/opt/airflow/dags
@@ -90,14 +89,13 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
       AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
-    
-      # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW ------------
-      AIRFLOW_CONN_PG_AMAZON: "postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin123}@amazon_postgres_db:5432/${POSTGRES_DB:-amazon_db}"
-      # AWS connection configured via CLI to avoid URL encoding issues
-      # AIRFLOW_CONN_AWS_S3_DEFAULT: "aws://?aws_access_key_id=${AWS_ACCESS_KEY}&aws_secret_access_key=${AWS_SECRET_KEY}&region_name=${AWS_REGION:-eu-west-3}&bucket_name=${AWS_S3_BUCKET}"
-      AIRFLOW_CONN_MONGO: "mongodb://${MONGO_USER:-admin}:${MONGODB_PASSWORD:-changeme}@mongodb:27017/"
-      AIRFLOW_CONN_SNOWFLAKE_CONN: "snowflake://${SNOWFLAKE_USER}:${SNOWFLAKE_PASSWORD}@${SNOWFLAKE_ACCOUNT}/${SNOWFLAKE_DB}/${SNOWFLAKE_SCHEMA}?warehouse=${SNOWFLAKE_WH}&role=${SNOWFLAKE_ROLE}"
-      # ----------------------------------------------------------
+
+      # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW (via .env) ------------
+      AIRFLOW_CONN_PG_AMAZON: ${AIRFLOW_CONN_PG_AMAZON}
+      AIRFLOW_CONN_AWS_S3_DEFAULT: ${AIRFLOW_CONN_AWS_S3_DEFAULT}
+      AIRFLOW_CONN_MONGO: ${AIRFLOW_CONN_MONGO}
+      AIRFLOW_CONN_SNOWFLAKE_CONN: ${AIRFLOW_CONN_SNOWFLAKE_CONN}
+      # --------------------------------------------------------------------
 
     volumes:
       - ./src_code/scripts/dags:/opt/airflow/dags
@@ -119,14 +117,13 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
       AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
-      
-      # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW ------------
-      AIRFLOW_CONN_PG_AMAZON: "postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin123}@amazon_postgres_db:5432/${POSTGRES_DB:-amazon_db}"
-      # AWS connection configured via CLI to avoid URL encoding issues
-      # AIRFLOW_CONN_AWS_S3_DEFAULT: "aws://?aws_access_key_id=${AWS_ACCESS_KEY}&aws_secret_access_key=${AWS_SECRET_KEY}&region_name=${AWS_REGION:-eu-west-3}&bucket_name=${AWS_S3_BUCKET}"
-      AIRFLOW_CONN_MONGO: "mongodb://${MONGO_USER:-admin}:${MONGODB_PASSWORD:-changeme}@mongodb:27017/"
-      AIRFLOW_CONN_SNOWFLAKE_CONN: "snowflake://${SNOWFLAKE_USER}:${SNOWFLAKE_PASSWORD}@${SNOWFLAKE_ACCOUNT}/${SNOWFLAKE_DB}/${SNOWFLAKE_SCHEMA}?warehouse=${SNOWFLAKE_WH}&role=${SNOWFLAKE_ROLE}"
-      # ----------------------------------------------------------
+
+      # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW (via .env) ------------
+      AIRFLOW_CONN_PG_AMAZON: ${AIRFLOW_CONN_PG_AMAZON}
+      AIRFLOW_CONN_AWS_S3_DEFAULT: ${AIRFLOW_CONN_AWS_S3_DEFAULT}
+      AIRFLOW_CONN_MONGO: ${AIRFLOW_CONN_MONGO}
+      AIRFLOW_CONN_SNOWFLAKE_CONN: ${AIRFLOW_CONN_SNOWFLAKE_CONN}
+      # --------------------------------------------------------------------
     volumes:
       - ./src_code/scripts/dags:/opt/airflow/dags
       - ./src_code/scripts/logs:/opt/airflow/logs
