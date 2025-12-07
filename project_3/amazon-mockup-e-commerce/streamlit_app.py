@@ -1,141 +1,219 @@
 import streamlit as st
 import requests
+import os
 
-API_URL = "http://backend:8000"
-st.title("E‑commerce Store")
+# URL de l'API - utilise localhost en local, backend dans Docker
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
-# Authentication placeholder
-buyer_id = st.text_input("Enter your Buyer ID:")
+# Configuration de la page
+st.set_page_config(
+    page_title="Amazon Reviews Analysis",
+    page_icon="🛒",
+    layout="wide"
+)
 
-if buyer_id:
-    # NEW SECTION: Show products purchased by this buyer
+st.title("🛒 Amazon Product Reviews - Relevance Analysis")
+
+st.markdown("""
+Browse products and view their **most relevant reviews** based on:
+- ⭐ Rating score
+- 📝 Text quality and length
+- 🔑 Keyword relevance
+- 📸 Presence of images
+""")
+
+st.divider()
+
+# Search method selection
+search_method = st.radio(
+    "🔍 How do you want to search?",
+    ["Browse Products", "Search by Product ID"],
+    horizontal=True
+)
+
+st.divider()
+
+selected_p_id = None
+selected_product = None
+
+if search_method == "Browse Products":
+    # Fetch all products from Snowflake
     try:
-        products_resp = requests.get(f"{API_URL}/buyers/{buyer_id}/products")
+        products_resp = requests.get(f"{API_URL}/snowflake/products?limit=100")
         products_resp.raise_for_status()
-        buyer_products = products_resp.json()
+        all_products = products_resp.json()
 
-        if buyer_products:
-            # Create dropdown with product IDs
-            product_options = [f"{p['p_id']} - {p['product_name']}" for p in buyer_products]
-            selected_buyer_product = st.selectbox("Select a Product ID:", product_options)
+        if all_products:
+            st.success(f"✅ {len(all_products)} produits disponibles")
 
-            # Extract selected product ID
-            selected_p_id = selected_buyer_product.split(" - ")[0]
+            # Add search filter
+            search_filter = st.text_input("🔎 Filter products by name:", placeholder="Type to search...")
 
-            # Display "Most Relevant Reviews" AFTER product selection
-            st.subheader("⭐ Most Relevant Reviews")
+            # Filter products based on search
+            if search_filter:
+                filtered_products = [
+                    p for p in all_products
+                    if search_filter.lower() in p['product_name'].lower()
+                ]
+            else:
+                filtered_products = all_products
 
-            # Display reviews from THIS BUYER ONLY for the selected product
-            try:
-                # Get reviews filtered by buyer_id and p_id
-                reviews_resp = requests.get(
-                    f"{API_URL}/buyers/{buyer_id}/products/{selected_p_id}/reviews"
-                )
-                reviews_resp.raise_for_status()
-                buyer_reviews = reviews_resp.json()
+            if filtered_products:
+                st.info(f"📊 Showing {len(filtered_products)} product(s)")
 
-                if buyer_reviews:
-                    for review in buyer_reviews:
-                        rating_display = f"{review['rating']}/5"
-                        confidence_score = review.get('confidence_score', 0.0)
+                # Create dropdown with product names
+                product_options = [
+                    f"{p['product_name']} ({p.get('category', 'N/A')})"
+                    for p in filtered_products
+                ]
 
-                        with st.expander(
-                            f"{rating_display} - {review['title'] or '[No title]'} "
-                            f"(Confidence: {confidence_score:.2f})"
-                        ):
-                            if review['r_desc']:
-                                st.write(review['r_desc'])
-                            else:
-                                st.write("No description provided")
+                selected_product_display = st.selectbox("📦 Select a Product:", product_options, key="product_selector")
 
-                            st.caption(f"Buyer: {review['buyer_id']}")
-
-                            # Display review images
-                            if review.get('images') and len(review['images']) > 0:
-                                st.caption("Has images")
-                                st.image(
-                                    review['images'],
-                                    caption=[f"Review image {i+1}" for i in range(len(review['images']))],
-                                    width=200
-                                )
-                else:
-                    st.info("No reviews available for this product.")
-
-            except requests.RequestException as e:
-                st.warning(f"Could not load reviews: {str(e)}")
-
+                # Find the selected product
+                selected_index = product_options.index(selected_product_display)
+                selected_product = filtered_products[selected_index]
+                selected_p_id = selected_product['p_id']
+            else:
+                st.warning("⚠️ No products match your search filter.")
     except requests.RequestException as e:
-        st.warning(f"Could not load buyer products: {str(e)}")
+        st.error(f"❌ Could not load products from Snowflake: {str(e)}")
+        st.info("💡 Please check that the backend API is running and Snowflake is accessible.")
+
+else:  # Search by Product ID
+    product_id_input = st.text_input(
+        "📦 Enter Product ID:",
+        placeholder="Ex: B076LFDBKD",
+        help="Enter the exact Product ID (case-sensitive)"
+    )
+
+    if product_id_input:
+        selected_p_id = product_id_input.strip()
+        # We'll fetch product info from the reviews later
+
+# Only proceed if we have a product ID
+if selected_p_id:
+    st.divider()
+
+    # Display product info if we have it from browsing
+    if selected_product:
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            st.subheader(f"📦 {selected_product['product_name']}")
+        with col2:
+            st.metric("🏷️ Category", selected_product.get('category', 'N/A'))
+    else:
+        # If searching by ID, show the ID
+        st.subheader(f"📦 Product ID: {selected_p_id}")
 
     st.divider()
 
-    # ORIGINAL E-COMMERCE SECTION
-    # Fetch products
-    products = requests.get(f"{API_URL}/products/").json()
-    options = [f"{p['p_name']} — ${p['price']}" for p in products]
-    choice = st.selectbox("Select a product to add to cart", options)
+    # Display "Most Relevant Reviews"
+    st.subheader("⭐ Most Relevant Reviews")
 
-    # Determine selected product
-    idx = options.index(choice)
-    selected = products[idx]
+    # Number of reviews to display
+    num_reviews = st.slider("Number of reviews to display:", min_value=5, max_value=20, value=10)
 
-    # Fetch and display product images
+    # Get reviews for the selected product from Snowflake
     try:
-        imgs_resp = requests.get(
-            f"{API_URL}/products/{selected['p_id']}/images"
+        reviews_resp = requests.get(
+            f"{API_URL}/snowflake/products/{selected_p_id}/reviews?limit={num_reviews}"
         )
-        imgs_resp.raise_for_status()
-        images_data = imgs_resp.json()
-        # images_data may be list of URLs or list of dicts with 'p_image'
-        image_urls = []
-        for item in images_data:
-            if isinstance(item, str):
-                image_urls.append(item)
-            elif isinstance(item, dict) and 'p_image' in item:
-                image_urls.append(item['p_image'])
-        if image_urls:
-            st.image(
-                image_urls,
-                caption=[f"image {i+1}" for i in range(len(image_urls))],
-                width=200,
-            )
-    except requests.RequestException:
-        st.error("Failed to load product images.")
+        reviews_resp.raise_for_status()
+        product_reviews = reviews_resp.json()
 
-    qty = st.number_input("Quantity", min_value=1, value=1)
-    if st.button("Add to cart"):
-        idx = options.index(choice)
-        p_id = products[idx]['p_id']
-        requests.post(f"{API_URL}/cart/{buyer_id}", params={"p_id": p_id, "qty": qty})
-        st.success(f"Added {qty}×{products[idx]['p_name']} to cart!")
+        if product_reviews:
+            st.info(f"📊 **{len(product_reviews)}** review(s) pertinente(s) trouvée(s)")
 
-    # Display Cart
-    st.header("Your Cart")
-    cart = requests.get(f"{API_URL}/cart/{buyer_id}").json()
-    if cart['total_qty'] > 0:
-        for item in cart['items']:
-            st.write(f"{item['p_id']}: Qty {item['qty']}")
-        st.write(f"**Total items:** {cart['total_qty']}")
-        st.write(f"**Total price:** ${cart['total_price']:.2f}")
+            for idx, review in enumerate(product_reviews, 1):
+                rating_display = "⭐" * review['rating']
+                relevance_score = review.get('relevance_score', 0.0)
+                confidence_score = review.get('confidence_score', 0.0)
 
-        # Checkout
-        st.subheader("Checkout")
-        payment_method = st.selectbox(
-            "Choose payment method", ["Credit Card", "PayPal", "Bank Transfer"]
-        )
-        if st.button("Buy Now"):
-            order = requests.post(
-                f"{API_URL}/checkout/{buyer_id}", params={"payment_method": payment_method}
-            ).json()
-            # compute total from returned items
-            total_price = sum(item["qty"] * item["price_at_purchase"] for item in order["items"])
-            st.success(f"Order {order['order_id']} placed! Total: ${total_price:.2f}")
-            # Fetch shipments
-            shipments = requests.get(f"{API_URL}/shipments/{order['order_id']}").json()
-            st.subheader("Shipments")
-            for s in shipments:
-                st.write(f"Item {s['p_id']} via carrier {s['carrier_id']} - Status: {s['status']}")
-                if s.get('est_delivery_date'):
-                    st.write(f"Estimated Delivery: {s['est_delivery_date']}")
-    else:
-        st.info("Your cart is empty.")
+                # Titre de l'expander avec rating et relevance score
+                with st.expander(
+                    f"**Review #{idx}** | {rating_display} ({review['rating']}/5) - "
+                    f"{review['title'] or '[No title]'} | "
+                    f"🎯 Relevance: {relevance_score:.2f}",
+                    expanded=(idx == 1)  # Only expand first review
+                ):
+                    # Description de la review
+                    if review['r_desc']:
+                        st.write("**📝 Description:**")
+                        st.write(review['r_desc'])
+                        st.caption(f"Longueur du texte: {review.get('text_length', 'N/A')} caractères")
+                    else:
+                        st.write("*No description provided*")
+
+                    st.divider()
+
+                    # Scores et métriques
+                    st.write("**📊 Scores et Métriques:**")
+                    col1, col2, col3, col4 = st.columns(4)
+
+                    with col1:
+                        st.metric("⭐ Rating", f"{review['rating']}/5")
+                        st.metric("🎯 Relevance Score", f"{relevance_score:.3f}")
+
+                    with col2:
+                        st.metric("🔍 Confidence Score", f"{confidence_score:.3f}")
+                        st.metric("📏 Text Length Score", f"{review.get('text_length_score', 0):.3f}")
+
+                    with col3:
+                        st.metric("🔑 Keyword Score", f"{review.get('keyword_score', 0):.3f}")
+                        extreme = "Yes" if review.get('is_extreme_rating') else "No"
+                        st.metric("⚡ Extreme Rating", extreme)
+
+                    with col4:
+                        has_img = "Yes ✅" if review.get('has_image') else "No ❌"
+                        st.metric("📸 Has Images", has_img)
+                        has_orders = "Yes ✅" if review.get('has_orders') else "No ❌"
+                        st.metric("🛍️ Has Orders", has_orders)
+
+                    st.divider()
+
+                    # Informations produit et catégorie
+                    st.write("**ℹ️ Informations:**")
+                    info_col1, info_col2, info_col3 = st.columns(3)
+
+                    with info_col1:
+                        st.caption(f"👤 **Buyer ID:** {review['buyer_id']}")
+                        st.caption(f"📦 **Product ID:** {review['p_id']}")
+
+                    with info_col2:
+                        st.caption(f"🏷️ **Product:** {review.get('product_name', 'N/A')}")
+                        st.caption(f"📂 **Category:** {review.get('category', 'N/A')}")
+
+                    with info_col3:
+                        st.caption(f"🏷️ **Review Category:** {review.get('category_review', 'N/A')}")
+                        st.caption(f"✅ **Status:** {review.get('relevant_status', 'N/A')}")
+
+                    # Display review images
+                    if review.get('images') and len(review['images']) > 0:
+                        st.divider()
+                        st.write("**📸 Review Images:**")
+
+                        # Afficher les images en colonnes
+                        num_images = len(review['images'])
+                        if num_images <= 3:
+                            cols = st.columns(num_images)
+                            for i, img_url in enumerate(review['images']):
+                                with cols[i]:
+                                    st.image(img_url, caption=f"Image {i+1}", use_container_width=True)
+                        else:
+                            # Si plus de 3 images, afficher en grille 3x3
+                            for i in range(0, num_images, 3):
+                                cols = st.columns(3)
+                                for j in range(3):
+                                    if i + j < num_images:
+                                        with cols[j]:
+                                            st.image(
+                                                review['images'][i+j],
+                                                caption=f"Image {i+j+1}",
+                                                use_container_width=True
+                                            )
+
+        else:
+            st.warning("⚠️ No relevant reviews found for this product.")
+
+    except requests.RequestException as e:
+        st.error(f"❌ Could not load reviews from Snowflake: {str(e)}")

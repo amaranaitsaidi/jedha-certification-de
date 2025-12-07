@@ -8,3 +8,4 @@ streamlit
 requests
 pydantic[email]
 python-dotenv
+snowflake-connector-python

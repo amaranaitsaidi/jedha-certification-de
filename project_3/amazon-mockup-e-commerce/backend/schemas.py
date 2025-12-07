@@ -90,12 +90,23 @@ class Orders(BaseModel):
 class Review(BaseModel):
     review_id: int
     buyer_id: Optional[str]
-    r_desc: Optional[str]
+    p_id: Optional[str]
+    product_name: Optional[str]
+    category: Optional[str]
     title: Optional[str]
+    r_desc: Optional[str]
     rating: int
-    confidence_score: Optional[float] = None  # Score de confiance depuis reviews_score
+    text_length: Optional[int] = None
     has_image: Optional[bool] = False
-    images: Optional[List[str]] = []  # URLs des images de la review
+    has_orders: Optional[bool] = False
+    text_length_score: Optional[float] = None
+    is_extreme_rating: Optional[bool] = False
+    keyword_score: Optional[float] = None
+    relevance_score: Optional[float] = None
+    category_review: Optional[str] = None
+    confidence_score: Optional[float] = None
+    relevant_status: Optional[str] = None
+    images: Optional[List[str]] = []
 
     class Config:
         orm_mode = True
@@ -103,3 +114,4 @@ class Review(BaseModel):
 class BuyerProduct(BaseModel):
     p_id: str
     product_name: str
+    category: Optional[str] = None
