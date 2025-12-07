@@ -115,7 +115,7 @@ class Category(Base):
 class Review(Base):
     __tablename__ = "review"
     review_id = Column(Integer, primary_key=True, index=True)
-    buyer_id = Column(String(40), nullable=True)
+    buyer_id = Column(String(100), nullable=True)
     r_desc = Column(String(20000), nullable=True)  # Description de la review
     title = Column(String(300), nullable=True)
     rating = Column(Integer, nullable=False)  # 1-5

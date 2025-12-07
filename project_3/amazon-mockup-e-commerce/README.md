@@ -1,29 +1,29 @@
-# Amazon Mockup E‑Commerce
+# Amazon Reviews - Relevance Analysis
 
-Welcome to the **Amazon Mockup E‑Commerce** project! This is a fully functional mockup e‑commerce application designed for students pursuing the Data Engineer certification [RNCP37172](https://www.francecompetences.fr/recherche/RNCP/37172/). It demonstrates end‑to‑end architecture using FastAPI, Streamlit, PostgreSQL, and Docker, giving you hands‑on experience building and deploying a modern web application.
+Welcome to the **Amazon Reviews Relevance Analysis** application! This Streamlit application displays relevant product reviews from Snowflake with their relevance scores, designed for the Data Engineer certification [RNCP37172](https://www.francecompetences.fr/recherche/RNCP/37172/).
 
 ---
 
 ## 🚀 Features
 
-* **User Registration & Authentication**: Secure signup and login with hashed passwords.
-* **Product Catalog**: Browse a selection of products retrieved from a PostgreSQL backend.
-* **Shopping Cart**: Add items to your cart, adjust quantities, and view your cart contents.
-* **Checkout & Orders**: Place an order, choose a payment method, and automatically generate order and shipment records.
-* **Shipment Tracking**: Track the status, carrier, and estimated delivery date for each item in your order.
-* **Dockerized Deployment**: Launch the entire stack (database, backend, frontend) with a single `docker-compose` command.
+* **Snowflake Integration**: Retrieves data directly from Snowflake data warehouse
+* **Buyer-Specific Reviews**: View reviews for products purchased by a specific buyer
+* **Relevance Scoring**: Displays reviews with calculated relevance scores
+* **Rich Metadata**: Shows rating, text length, keyword scores, confidence scores
+* **Review Images**: Displays images associated with reviews
+* **Streamlit UI**: Clean, interactive interface for exploring reviews
 
 ---
 
 ## 🔧 Prerequisites
 
-* **Docker & Docker Compose** (v2.0+)
 * **Python** (3.9+)
-* **PostgreSQL** database (if you’d rather run it outside Docker)
+* **Snowflake Account** with access to the review data
+* **Docker** (optional, for backend deployment)
 
 ---
 
-## 💻 Getting Started
+## 💻 Local Development
 
 1. **Clone the repository**
 
@@ -32,58 +32,131 @@ Welcome to the **Amazon Mockup E‑Commerce** project! This is a fully functiona
    cd amazon-mockup-e-commerce
    ```
 
-2. **Configure Environment**
-
-   * Create a `.env` file in the project root.
-   * Add your database connection string:
-
-     ```env
-     DATABASE_URL=postgresql://<username>:<password>@<host>:<port>/<dbname>
-     ```
-
-3. **Launch with Docker Compose**
+2. **Install dependencies**
 
    ```bash
-   docker-compose up --build
+   pip install -r requirements.txt
+   pip install -r backend/requirements.txt
    ```
 
-   This will spin up three services:
+3. **Configure Environment**
 
-   * **db**: PostgreSQL database with initial migrations applied.
-   * **backend**: FastAPI application exposed on port **8000**.
-   * **frontend**: Streamlit UI exposed on port **8501**.
+   Create a `.env` file in the project root with your Snowflake credentials:
 
-4. **Explore the App**
+   ```env
+   # Snowflake Configuration
+   SNOWFLAKE_USER=your_user
+   SNOWFLAKE_PASSWORD=your_password
+   SNOWFLAKE_ACCOUNT=your_account
+   SNOWFLAKE_WAREHOUSE=COMPUTE_WH
+   SNOWFLAKE_DATABASE=AMAZON_REVIEWS
+   SNOWFLAKE_SCHEMA=staging
+   SNOWFLAKE_ROLE=ACCOUNTADMIN
+   ```
 
-   * Visit **[http://localhost:8501](http://localhost:8501)** to open the Streamlit storefront.
-   * Use the Streamlit UI to sign up, login (using a generated buyer ID), browse products, add to cart, and checkout.
+4. **Start the Backend (FastAPI)**
+
+   ```bash
+   cd backend
+   python main.py
+   ```
+
+   The backend API will be available at **http://localhost:8000**
+
+5. **Start Streamlit**
+
+   In a new terminal:
+
+   ```bash
+   streamlit run streamlit_app.py
+   ```
+
+   Visit **[http://localhost:8501](http://localhost:8501)** to access the application.
+
+6. **Use the Application**
+
+   * Enter a Buyer ID (e.g., `d4a89317dd13a4a86e9f4677523427df2ff0751ee3bfbed2aab2839c0b7873bb`)
+   * Select a product from the dropdown
+   * View relevant reviews with scores and images
+
+---
+
+## 🌐 Deployment
+
+### Deploy Backend (FastAPI)
+
+The backend can be deployed using Docker:
+
+```bash
+docker build -t amazon-reviews-backend .
+docker run -p 8000:8000 --env-file .env amazon-reviews-backend
+```
+
+Or deploy to cloud platforms like:
+- **Render** (recommended for FastAPI)
+- **Railway**
+- **Heroku**
+
+### Deploy Frontend (Streamlit Cloud)
+
+1. Push your code to GitHub
+2. Go to [share.streamlit.io](https://share.streamlit.io)
+3. Connect your repository
+4. Add Snowflake credentials in **Secrets** (Settings → Secrets):
+
+   ```toml
+   SNOWFLAKE_USER = "your_user"
+   SNOWFLAKE_PASSWORD = "your_password"
+   SNOWFLAKE_ACCOUNT = "your_account"
+   SNOWFLAKE_WAREHOUSE = "COMPUTE_WH"
+   SNOWFLAKE_DATABASE = "AMAZON_REVIEWS"
+   SNOWFLAKE_SCHEMA = "staging"
+   SNOWFLAKE_ROLE = "ACCOUNTADMIN"
+   ```
+
+5. Set the backend URL in **Secrets** (or as an environment variable):
+
+   ```toml
+   API_URL = "https://your-backend-url.com"
+   ```
+
+6. Deploy!
 
 ---
 
 ## 📂 Project Structure
 
 ```plaintext
-├── backend
-│   ├── app
-│   │   ├── database.py       # SQLAlchemy setup
-│   │   ├── models.py         # ORM models
-│   │   ├── schemas.py        # Pydantic schemas
-│   │   ├── crud.py           # Business logic
-│   │   └── main.py           # FastAPI entrypoint
-│   └── Dockerfile
-├── streamlit_app.py          # Streamlit frontend
-├── docker-compose.yml        # Multi‑container setup
-├── requirements.txt          # Python dependencies
-└── README.md                 # This file
+├── backend/
+│   ├── main.py                  # FastAPI entrypoint
+│   ├── database.py              # PostgreSQL setup (optional)
+│   ├── models.py                # ORM models
+│   ├── schemas.py               # Pydantic schemas
+│   ├── crud.py                  # PostgreSQL CRUD (optional)
+│   ├── snowflake_connector.py   # Snowflake connection
+│   ├── snowflake_crud.py        # Snowflake queries
+│   └── requirements.txt         # Backend dependencies
+├── streamlit_app.py             # Streamlit frontend
+├── requirements.txt             # Frontend dependencies
+├── Dockerfile                   # Docker config for backend
+├── .env.example                 # Example environment variables
+└── README.md                    # This file
 ```
 
 ---
 
 ## ⚙️ Environment Variables
 
-| Name           | Description                            |
-| -------------- | -------------------------------------- |
-| `DATABASE_URL` | Connection string to your Postgres DB. |
+| Name                  | Description                              |
+| --------------------- | ---------------------------------------- |
+| `SNOWFLAKE_USER`      | Your Snowflake username                  |
+| `SNOWFLAKE_PASSWORD`  | Your Snowflake password                  |
+| `SNOWFLAKE_ACCOUNT`   | Your Snowflake account identifier        |
+| `SNOWFLAKE_WAREHOUSE` | Snowflake warehouse name (e.g., COMPUTE_WH) |
+| `SNOWFLAKE_DATABASE`  | Snowflake database name                  |
+| `SNOWFLAKE_SCHEMA`    | Snowflake schema name                    |
+| `SNOWFLAKE_ROLE`      | Snowflake role (e.g., ACCOUNTADMIN)      |
+| `API_URL`             | Backend API URL (for Streamlit Cloud)    |
 
 ---
 
