@@ -118,7 +118,7 @@ def setup_snowflake_task():
 
     # Create reviews table
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS reviews (
+        CREATE OR REPLACE TABLE reviews (
             review_id VARCHAR(50) PRIMARY KEY,
             buyer_id VARCHAR(100),
             p_id VARCHAR(50),
@@ -130,6 +130,7 @@ def setup_snowflake_task():
             text_length INTEGER,
             has_image BOOLEAN DEFAULT FALSE,
             has_orders BOOLEAN DEFAULT FALSE,
+            review_img VARCHAR(500),
             ingestion_timestamp TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
             pipeline_version VARCHAR(20)
         )

@@ -9,11 +9,8 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      # Mount CSV data files (cleaned version without index column)
       - ./data/clean:/data/origin:ro
-      # Mount initialization scripts
       - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
-      # Persist database data
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d amazon_db"]

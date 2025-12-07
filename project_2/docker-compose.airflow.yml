@@ -36,6 +36,17 @@ services:
       AIRFLOW_CONN_MONGO: ${AIRFLOW_CONN_MONGO}
       AIRFLOW_CONN_SNOWFLAKE_CONN: ${AIRFLOW_CONN_SNOWFLAKE_CONN}
       # --------------------------------------------------------------------
+
+      # ------------ SMTP CONFIGURATION FOR EMAIL ALERTS (via .env) -------
+      AIRFLOW__SMTP__SMTP_HOST: ${AIRFLOW__SMTP__SMTP_HOST}
+      AIRFLOW__SMTP__SMTP_STARTTLS: ${AIRFLOW__SMTP__SMTP_STARTTLS}
+      AIRFLOW__SMTP__SMTP_SSL: ${AIRFLOW__SMTP__SMTP_SSL}
+      AIRFLOW__SMTP__SMTP_PORT: ${AIRFLOW__SMTP__SMTP_PORT}
+      AIRFLOW__SMTP__SMTP_MAIL_FROM: ${AIRFLOW__SMTP__SMTP_MAIL_FROM}
+      AIRFLOW__SMTP__SMTP_USER: ${AIRFLOW__SMTP__SMTP_USER}
+      AIRFLOW__SMTP__SMTP_PASSWORD: ${AIRFLOW__SMTP__SMTP_PASSWORD}
+      ALERT_EMAIL: ${ALERT_EMAIL}
+      # --------------------------------------------------------------------
     
     volumes:
       - ./src_code/scripts/dags:/opt/airflow/dags
@@ -68,6 +79,17 @@ services:
       AIRFLOW_CONN_SNOWFLAKE_CONN: ${AIRFLOW_CONN_SNOWFLAKE_CONN}
       # --------------------------------------------------------------------
 
+      # ------------ SMTP CONFIGURATION FOR EMAIL ALERTS (via .env) -------
+      AIRFLOW__SMTP__SMTP_HOST: ${AIRFLOW__SMTP__SMTP_HOST}
+      AIRFLOW__SMTP__SMTP_STARTTLS: ${AIRFLOW__SMTP__SMTP_STARTTLS}
+      AIRFLOW__SMTP__SMTP_SSL: ${AIRFLOW__SMTP__SMTP_SSL}
+      AIRFLOW__SMTP__SMTP_PORT: ${AIRFLOW__SMTP__SMTP_PORT}
+      AIRFLOW__SMTP__SMTP_MAIL_FROM: ${AIRFLOW__SMTP__SMTP_MAIL_FROM}
+      AIRFLOW__SMTP__SMTP_USER: ${AIRFLOW__SMTP__SMTP_USER}
+      AIRFLOW__SMTP__SMTP_PASSWORD: ${AIRFLOW__SMTP__SMTP_PASSWORD}
+      ALERT_EMAIL: ${ALERT_EMAIL}
+      # --------------------------------------------------------------------
+
     volumes:
       - ./src_code/scripts/dags:/opt/airflow/dags
       - ./src_code/scripts/logs:/opt/airflow/logs
@@ -97,6 +119,17 @@ services:
       AIRFLOW_CONN_SNOWFLAKE_CONN: ${AIRFLOW_CONN_SNOWFLAKE_CONN}
       # --------------------------------------------------------------------
 
+      # ------------ SMTP CONFIGURATION FOR EMAIL ALERTS (via .env) -------
+      AIRFLOW__SMTP__SMTP_HOST: ${AIRFLOW__SMTP__SMTP_HOST}
+      AIRFLOW__SMTP__SMTP_STARTTLS: ${AIRFLOW__SMTP__SMTP_STARTTLS}
+      AIRFLOW__SMTP__SMTP_SSL: ${AIRFLOW__SMTP__SMTP_SSL}
+      AIRFLOW__SMTP__SMTP_PORT: ${AIRFLOW__SMTP__SMTP_PORT}
+      AIRFLOW__SMTP__SMTP_MAIL_FROM: ${AIRFLOW__SMTP__SMTP_MAIL_FROM}
+      AIRFLOW__SMTP__SMTP_USER: ${AIRFLOW__SMTP__SMTP_USER}
+      AIRFLOW__SMTP__SMTP_PASSWORD: ${AIRFLOW__SMTP__SMTP_PASSWORD}
+      ALERT_EMAIL: ${ALERT_EMAIL}
+      # --------------------------------------------------------------------
+
     volumes:
       - ./src_code/scripts/dags:/opt/airflow/dags
       - ./src_code/scripts/logs:/opt/airflow/logs
@@ -123,6 +156,17 @@ services:
       AIRFLOW_CONN_AWS_S3_DEFAULT: ${AIRFLOW_CONN_AWS_S3_DEFAULT}
       AIRFLOW_CONN_MONGO: ${AIRFLOW_CONN_MONGO}
       AIRFLOW_CONN_SNOWFLAKE_CONN: ${AIRFLOW_CONN_SNOWFLAKE_CONN}
+      # --------------------------------------------------------------------
+
+      # ------------ SMTP CONFIGURATION FOR EMAIL ALERTS (via .env) -------
+      AIRFLOW__SMTP__SMTP_HOST: ${AIRFLOW__SMTP__SMTP_HOST}
+      AIRFLOW__SMTP__SMTP_STARTTLS: ${AIRFLOW__SMTP__SMTP_STARTTLS}
+      AIRFLOW__SMTP__SMTP_SSL: ${AIRFLOW__SMTP__SMTP_SSL}
+      AIRFLOW__SMTP__SMTP_PORT: ${AIRFLOW__SMTP__SMTP_PORT}
+      AIRFLOW__SMTP__SMTP_MAIL_FROM: ${AIRFLOW__SMTP__SMTP_MAIL_FROM}
+      AIRFLOW__SMTP__SMTP_USER: ${AIRFLOW__SMTP__SMTP_USER}
+      AIRFLOW__SMTP__SMTP_PASSWORD: ${AIRFLOW__SMTP__SMTP_PASSWORD}
+      ALERT_EMAIL: ${ALERT_EMAIL}
       # --------------------------------------------------------------------
     volumes:
       - ./src_code/scripts/dags:/opt/airflow/dags
