@@ -1,4 +1,0 @@
-Ajouter un système d'alerte à l'étape d'extraction des données de postgresql vers s3 : alert email. 
-Ajouter une alerte entre process_and_store et le datawarehouse snowflake si il y a aucune données : Alert email. 
-
-
