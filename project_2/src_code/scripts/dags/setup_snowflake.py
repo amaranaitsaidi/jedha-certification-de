@@ -78,6 +78,7 @@ def setup_snowflake():
             text_length INTEGER,
             has_image BOOLEAN DEFAULT FALSE,
             has_orders BOOLEAN DEFAULT FALSE,
+            review_img VARCHAR(500),
             ingestion_timestamp TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
             pipeline_version VARCHAR(20)
         )
@@ -85,7 +86,8 @@ def setup_snowflake():
 
     print("  [OK] Table: reviews")
     print("    - Columns: review_id, buyer_id, product_id, product_name, category")
-    print("               title, description, rating, has_image, ingestion_timestamp")
+    print("               title, description, rating, has_image, has_orders, review_img")
+    print("               ingestion_timestamp, pipeline_version")
 
     # ========================================
     # 4. S3 Stage

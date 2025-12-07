@@ -15,6 +15,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.hooks.base import BaseHook
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from utils.email_alerter import EmailAlerter
 
 
 
@@ -186,14 +187,14 @@ class PostgresToS3Extractor:
 
         # Define tables and queries
         tables = {
-            'product': None,  # Extract all products
-            'category': None,  # Extract all categories
-            'buyer' : None,    # Extract all buyers
-            'review': None,   # Extract all reviews
-            'product_reviews': None,  # Extract all product-review mappings
-            'review_images': None,    # Extract all review images
-            'orders': None,   # Extract all orders
-            'carrier': None,  # this is for test
+            'product': None, 
+            'category': None, 
+            'buyer' : None,    
+            'review': None,   
+            'product_reviews': None,  
+            'review_images': None,    
+            'orders': None,   
+            'carrier': None,  
         }
 
         # Extract each table
@@ -234,6 +235,43 @@ def airflow_run(**context):
     return extracted_results
 
 
+def check_extraction_results(**context):
+    """Check extraction results and send alert if tables failed"""
+    ti = context['ti']
+    dag_id = context['dag'].dag_id
+    task_id = context['task'].task_id
+    execution_date = context['execution_date'].isoformat()
+
+    # Get extraction results from previous task
+    extracted_results = ti.xcom_pull(task_ids='extract_to_s3')
+
+    if not extracted_results:
+        logger.error("No extraction results found")
+        return
+
+    # Check for failed tables
+    failed_tables = {table: uri for table, uri in extracted_results.items() if uri is None}
+
+    if failed_tables:
+        logger.warning(f"Found {len(failed_tables)} failed table(s): {list(failed_tables.keys())}")
+
+        # Send alert email
+        alerter = EmailAlerter(
+            to_emails=os.getenv("ALERT_EMAIL", "admin@example.com").split(",")
+        )
+
+        alerter.alert_no_data_from_s3(
+            dag_id=dag_id,
+            task_id=task_id,
+            execution_date=execution_date,
+            tables=extracted_results
+        )
+
+        logger.info("Alert email sent for failed extraction")
+    else:
+        logger.info("All tables extracted successfully, no alert needed")
+
+
 with DAG(
     "extract_postgres_to_s3",
     start_date=datetime(2024, 1, 1),
@@ -247,12 +285,19 @@ with DAG(
         provide_context=True
     )
 
-    # Task 2 -> Trigger DAG "transform_load_data"
+    # Check extraction results and send alert if needed
+    check_results_task = PythonOperator(
+        task_id="check_extraction_results",
+        python_callable=check_extraction_results,
+        provide_context=True
+    )
+
+    # Task 3 -> Trigger DAG "transform_load_data"
     trigger_transform = TriggerDagRunOperator(
         task_id="fetch_s3_paths",
-        trigger_dag_id="transform_load_data", 
+        trigger_dag_id="transform_load_data",
         wait_for_completion=False,
     )
 
-    extract_task >> trigger_transform
+    extract_task >> check_results_task >> trigger_transform
 

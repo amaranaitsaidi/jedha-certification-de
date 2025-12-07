@@ -159,7 +159,7 @@ class ReviewProcessor:
             s3_paths: Dict mapping table names to S3 URIs
 
         Returns:
-            Dict of DataFrames
+            Dict of DataFrames (or None if failed)
         """
         logger.info("Loading tables from S3...")
         tables = {}
@@ -171,7 +171,7 @@ class ReviewProcessor:
                 logger.info(f"  [OK] {table_name}: {len(df):,} rows")
             except Exception as e:
                 logger.error(f"  [FAIL] {table_name}: {e}")
-                raise
+                tables[table_name] = None  # Mark as failed but continue
 
         return tables
 
@@ -205,28 +205,47 @@ class ReviewProcessor:
 
         # SQL query
         query = f"""
-        select
-            distinct o.buyer_id,
+        WITH first_image_per_review AS (
+            SELECT
+                review_id,
+                review_img,
+                ROW_NUMBER() OVER (PARTITION BY review_id ORDER BY review_img) AS rn
+            FROM review_images
+        ),
+        orders_per_buyer AS (
+            SELECT
+                buyer_id,
+                COUNT(*) AS order_count
+            FROM orders
+            GROUP BY buyer_id
+        )
+        SELECT
+            r.buyer_id,
             r.review_id,
             r.title,
             r.r_desc AS description,
             r.rating,
+            fi.review_img,  -- une seule image par review
             LENGTH(r.r_desc) AS text_length,
-            CASE WHEN ri.review_id IS NOT NULL THEN 1 ELSE 0 END AS has_image,
-            CASE WHEN o.order_id IS NOT NULL THEN 1 ELSE 0 END AS has_orders,
+            CASE WHEN fi.review_img IS NOT NULL THEN 1 ELSE 0 END AS has_image,
+            CASE WHEN opb.order_count IS NOT NULL THEN 1 ELSE 0 END AS has_orders,
             p.p_id,
             p.p_name AS product_name,
             c.name AS category
         FROM review r
-        LEFT JOIN product_reviews pr ON r.review_id = pr.review_id
-        LEFT JOIN product p ON pr.p_id = p.p_id
-        LEFT JOIN category c ON p.category_id = c.category_id
-        LEFT JOIN review_images ri ON r.review_id = ri.review_id
-        LEFT JOIN orders  o ON r.buyer_id = o.buyer_id
-        {where_clause}
-        ORDER BY r.review_id
+        LEFT JOIN first_image_per_review fi
+            ON r.review_id = fi.review_id AND fi.rn = 1
+        LEFT JOIN product_reviews pr
+            ON r.review_id = pr.review_id
+        LEFT JOIN product p
+            ON pr.p_id = p.p_id
+        LEFT JOIN category c
+            ON p.category_id = c.category_id
+        LEFT JOIN orders_per_buyer opb
+            ON r.buyer_id = opb.buyer_id
+        {where_clause};  
         """
-
+        
         df = sqldf(query, locals())
         logger.info(f"  [OK] Joined {len(df):,} rows")
 
@@ -319,6 +338,7 @@ class ReviewProcessor:
         df_clean['text_length'] = df_clean['text_length'].fillna(0).astype(int)
         df_clean['has_image'] = df_clean['has_image'].fillna(0).astype(bool)
         df_clean['has_orders'] = df_clean['has_orders'].fillna(0).astype(bool)
+        # review_img: Keep NaN values as-is, they're handled properly in save_to_snowflake()
 
         logger.info(f"  [OK] Final clean dataset: {len(df_clean):,} rows")
         logger.info(f"  [OK] Total rejected: {len(rejected_records)} records")
@@ -384,22 +404,28 @@ class ReviewProcessor:
         df_to_insert['has_image'] = df_to_insert['has_image'].astype(int)
         df_to_insert['has_orders'] = df_to_insert['has_orders'].astype(int)
 
-        # Insert rows
+        # TRUNCATE table to remove all existing data (full refresh)
+        logger.info("Truncating reviews table...")
+        cursor.execute("TRUNCATE TABLE reviews")
+        logger.info("  [OK] Table truncated")
+
+        # INSERT all rows in batch
         insert_query = """
         INSERT INTO reviews (
             review_id, buyer_id, p_id, product_name, category,
             title, description, rating, text_length, has_image, has_orders,
-            ingestion_timestamp, pipeline_version
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            review_img, ingestion_timestamp, pipeline_version
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
-        # Convert to list of dictionaries for easier handling
+        # Convert to list of tuples for executemany
         rows = []
         for record in df_to_insert.to_dict('records'):
             # Handle NaN values properly
             buyer_id = record['buyer_id'] if pd.notna(record['buyer_id']) else None
             p_id = record['p_id'] if pd.notna(record['p_id']) else None
             product_name = record['product_name'] if pd.notna(record['product_name']) else None
+            review_img = record['review_img'] if pd.notna(record['review_img']) else None
 
             rows.append((
                 record['review_id'],
@@ -413,14 +439,16 @@ class ReviewProcessor:
                 int(record['text_length']),
                 bool(record['has_image']),
                 bool(record['has_orders']),
+                review_img,
                 record['ingestion_timestamp'].strftime('%Y-%m-%d %H:%M:%S'),
                 record['pipeline_version']
             ))
 
+        # Execute batch insert (much faster than individual inserts)
         cursor.executemany(insert_query, rows)
         cursor.close()
 
-        logger.info(f"  [OK] Inserted {len(rows):,} rows to Snowflake")
+        logger.info(f"  [OK] Inserted {len(rows):,} rows to Snowflake (full refresh)")
 
         return len(rows)
 
