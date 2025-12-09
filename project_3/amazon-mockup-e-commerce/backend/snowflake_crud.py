@@ -2,7 +2,20 @@
 Fonctions CRUD pour interroger Snowflake
 """
 from snowflake_connector import execute_query
+import os
+from dotenv import load_dotenv
+from pathlib import Path
 
+# Load .env from current directory or parent directory
+env_path = Path('.env')
+if not env_path.exists():
+    env_path = Path('../.env')
+
+load_dotenv(dotenv_path=env_path)
+
+
+database= os.getenv('SNOWFLAKE_DATABASE')
+schema=os.getenv('SNOWFLAKE_SCHEMA_ANALYTICS')
 
 def get_all_products_from_snowflake(limit: int = 100):
     """
@@ -14,12 +27,12 @@ def get_all_products_from_snowflake(limit: int = 100):
     Returns:
         Liste des produits uniques avec leurs informations
     """
-    query = """
+    query = f"""
         SELECT DISTINCT
             P_ID,
             PRODUCT_NAME,
             CATEGORY
-        FROM AMAZON_REVIEWS.staging.review_relevant
+        FROM {database}.{schema}.review_relevant
         ORDER BY PRODUCT_NAME
         LIMIT %(limit)s
     """
@@ -47,12 +60,12 @@ def get_buyer_products_from_snowflake(buyer_id: str):
     Returns:
         Liste des produits uniques achetés par le buyer
     """
-    query = """
+    query = f"""
         SELECT DISTINCT
             P_ID,
             PRODUCT_NAME,
             CATEGORY
-        FROM AMAZON_REVIEWS.staging.review_relevant
+        FROM {database}.{schema}.review_relevant
         WHERE BUYER_ID = %(buyer_id)s
         ORDER BY P_ID
     """
@@ -83,7 +96,7 @@ def get_product_reviews_from_snowflake(p_id: str, limit: int = 10):
         Liste des reviews avec tous les scores et métadonnées
     """
     # Requête pour récupérer les reviews depuis la table staging
-    query = """
+    query = f"""
         SELECT
             REVIEW_ID,
             BUYER_ID,
@@ -104,7 +117,7 @@ def get_product_reviews_from_snowflake(p_id: str, limit: int = 10):
             CONFIDENCE_SCORE,
             RELEVANT_STATUS,
             REVIEW_IMG
-        FROM AMAZON_REVIEWS.staging.review_relevant
+        FROM {database}.{schema}.review_relevant
         WHERE P_ID = %(p_id)s
           AND RELEVANT_STATUS = 'RELEVANT'
         ORDER BY RELEVANCE_SCORE DESC
@@ -166,7 +179,7 @@ def get_relevant_reviews_from_snowflake(buyer_id: str, p_id: str):
         Liste des reviews avec tous les scores et métadonnées
     """
     # Requête pour récupérer les reviews depuis la table staging
-    query = """
+    query = f"""
         SELECT
             REVIEW_ID,
             BUYER_ID,
@@ -187,7 +200,7 @@ def get_relevant_reviews_from_snowflake(buyer_id: str, p_id: str):
             CONFIDENCE_SCORE,
             RELEVANT_STATUS,
             REVIEW_IMG
-        FROM AMAZON_REVIEWS.staging.review_relevant
+        FROM {database}.{schema}.review_relevant
         WHERE BUYER_ID = %(buyer_id)s
           AND P_ID = %(p_id)s
           AND RELEVANT_STATUS = 'RELEVANT'
