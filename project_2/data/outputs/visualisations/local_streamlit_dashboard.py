@@ -267,3 +267,25 @@ df_kpi_m4 = run_query("""
 """)
 
 st.dataframe(df_kpi_m4, use_container_width=True)
+
+
+# -------------------------------------------------------------------
+# KPI METIER 7 — Les avis catégorisés customer service or support
+# -------------------------------------------------------------------
+show_section("KPI 7 — Les avis catégories -Customer service or support-",
+             "Indique les produits générant le plus d'engagement client.")
+
+df_kpi_m5 = run_query("""
+    SELECT
+        PRODUCT_NAME,
+        RATING,
+        RELEVANCE_SCORE,
+        CONFIDENCE_SCORE,
+        DESCRIPTION
+        FROM DB_AMZ.ANALYTICS.REVIEW_RELEVANT
+        WHERE CATEGORY_REVIEW = 'customer service or support'
+        ORDER BY RATING ASC
+;
+""")
+
+st.dataframe(df_kpi_m5, use_container_width=True)
