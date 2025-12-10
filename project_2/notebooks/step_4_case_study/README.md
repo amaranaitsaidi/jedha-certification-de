@@ -15,6 +15,8 @@ project_2/
 │
 ├── notebooks/
 │   ├── step_4_case_study/
+|   |   ├── data
+|   |   |   └── df_relevant_reviews.csv         📄 fichier pré-calculé
 │   │   ├── Step_4_Case_Study_Analysis.ipynb    ⭐ Notebook principal
 │   │   └── README.md                           📄 Ce fichier
 │   │
@@ -25,30 +27,13 @@ project_2/
 │
 ├── data/outputs/
 │   ├── visualizations/                         📊 Graphiques générés
-│   │   ├── 04_eda_stats_generales.png
-│   │   ├── 04_eda_stats_par_rating.png
-│   │   ├── 07_confidence_distribution.png
-│   │   ├── 09_relevance_distribution.png
-│   │   ├── 10_category_rating_heatmap.html
-│   │   └── 10_wordclouds_by_category.png
-│   │
-│   ├── models/                                 🤖 Modèles entraînés (futurs)
-│   └── processed/                              💾 Données préparées
-│       ├── reviews_analyzed.parquet
-│       ├── category_stats.csv
-│       └── top_reviews.csv
+│   │   ├── local_streamlit_dashboard.py        📊 Dashboard à exécuter en local (similaire au résultat du streamlit App sur Snowflake)
+│   └── └── snowflake_streamlit_dashboard.py    📊 Streamlit App Snowflake
 │
-├── dashboards/                                 🎨 Application Streamlit
-│   ├── streamlit_app.py                        → App principale
-│   ├── pages/                                  → Pages multi-pages
-│   ├── components/                             → Composants réutilisables
-│   └── utils/                                  → Utilitaires (DB, processing)
 │
 └── docs/
-    ├── step_4_analysis_report.md               📄 Rapport final (5-10 pages)
-    └── figures/                                → Figures pour le rapport
+    └── Project2-step4-Analysis-report...pdf    📄 Rapport d'analyse (5-10 pages)
 ```
-
 ---
 
 ## 🚀 Démarrage Rapide
@@ -97,61 +82,25 @@ conn_params = {
 - Import des bibliothèques
 - Connexion à Snowflake
 
-### Section 3 : Extraction des Données
+### Section 3 : Extraction des Données et application des algorithmes
 - Sélection du produit échantillon
 - Extraction des reviews depuis Snowflake
 - Nettoyage des données
+- Application de l'algorithme de pondération
+- Application de l'agorithme Zero-shot. Note : pour gagner du temps, ne pas lancer les algorithmes et partir directement de la section 3.1.1 en utilisant le fichier pré-calculé.
+- Définission de seuils de pertinence
 
-### Section 4 : Analyse Exploratoire (EDA)
+### Section 4 : Sauvegarde des résultats dans Snowflake
 - Statistiques descriptives
 - Visualisations (ratings, longueur, images)
 - Insights clés
 
-### Section 5 : Choix de l'Algorithme
-- Comparaison des approches NLP
-- Justification du choix (Zero-Shot Classification)
-- Définition des catégories métier
+### Section 5 : Dashboards et visulations
+- Pour cette section il faut soit passer dans Snowflake et lancer une Streamlit App. Soit lancer en local le fichier avec le script streamlit fourni.
 
-### Section 6 : Implémentation NLP
-- Initialisation du modèle (BART/mDeBERTa)
-- Fonction de classification
-- Application sur l'échantillon
 
-### Section 7 : Vérification & Performance
-- Métriques de convergence
-- Confidence score distribution
-- Validation manuelle
-
-### Section 8 : Tests Itératifs
-- Expérimentation 1 : Regroupement de catégories
-- Expérimentation 2 : Filtrage des reviews courtes
-- Expérimentation 3 : Comparaison de modèles
-
-### Section 9 : Relevance Score
-- Formule multi-critères (5 composantes)
-- Calcul des sous-scores
-- Distribution et classification
-
-### Section 10 : Visualisations & Insights
-- Heatmap catégories vs ratings
-- Top reviews pertinentes
-- Word clouds par catégorie
-- Insights métier
-
-### Section 11 : Préparation Dashboard
-- Agrégations pour Streamlit
-- Export vers Snowflake/fichiers locaux
-- Structure du dashboard
-
-### Section 12 : Limitations & Recommandations
-- Limitations identifiées
-- Roadmap d'amélioration (court/moyen/long terme)
-- Métriques de succès
-
-### Section 13 : Livrables & Export
-- Checklist de complétion
-- Export du rapport final
-- Documentation
+### Section 6 : Livrables & Export
+- Documentation : rapport d'analyse
 
 ---
 
@@ -159,7 +108,7 @@ conn_params = {
 
 ### Zero-Shot Classification
 
-**Modèle** : `facebook/bart-large-mnli` (ou `mDeBERTa-v3` pour multilingue)
+**Modèle** : `mDeBERTa-v3` pour multilingue
 
 **Catégories métier** :
 1. **Product Quality or Satisfaction** : Qualité, performance, satisfaction
@@ -180,9 +129,9 @@ conn_params = {
 
 ```python
 relevance_score = (
-    0.25 × text_length_score      # Gaussienne centrée sur 300 caractères
+    0.30 × text_length_score      # Gaussienne centrée sur 300 caractères
   + 0.20 × has_image              # Présence d'image (0 ou 1)
-  + 0.15 × has_orders             # Achat vérifié (0 ou 1)
+  + 0.10 × has_orders             # Achat vérifié (0 ou 1)
   + 0.15 × is_extreme_rating      # Rating 1★ ou 5★ (0 ou 1)
   + 0.25 × sentiment_score        # VADER sentiment (0-1)
 ) × 100
@@ -190,34 +139,10 @@ relevance_score = (
 
 **Échelle** : 0-100 (plus élevé = plus pertinent)
 
-**Seuil de pertinence** : 80/100 (identifie le top 15-20% des reviews)
+**Seuil de pertinence** : 60/100
 
 ---
 
-## 📦 Livrables
-
-### ✅ Fichiers générés par le notebook
-
-1. **Visualisations** (8 graphiques) :
-   - `data/outputs/visualizations/*.png|html`
-
-2. **Données préparées** :
-   - `data/outputs/processed/reviews_analyzed.parquet` (dataset complet)
-   - `data/outputs/processed/category_stats.csv` (statistiques par catégorie)
-   - `data/outputs/processed/top_reviews.csv` (reviews pertinentes)
-
-3. **SQL Queries** (3 fichiers) :
-   - `notebooks/sql_queries/01_data_extraction.sql`
-   - `notebooks/sql_queries/02_data_aggregation.sql`
-   - `notebooks/sql_queries/03_advanced_analysis.sql`
-
-4. **Rapport d'analyse** (à générer) :
-   - `docs/step_4_analysis_report.md` (5-10 pages)
-
-5. **Dashboard Streamlit** (à développer) :
-   - `dashboards/streamlit_app.py`
-
----
 
 ## 🛠️ Technologies Utilisées
 
@@ -235,50 +160,10 @@ relevance_score = (
 
 ---
 
-## 🔄 Workflow d'Exécution
-
-```mermaid
-graph LR
-    A[Snowflake] --> B[Extraction SQL]
-    B --> C[EDA]
-    C --> D[Zero-Shot NLP]
-    D --> E[Relevance Score]
-    E --> F[Visualisations]
-    F --> G[Export Dashboard]
-    G --> H[Streamlit App]
-```
-
-**Temps estimé** : 30-60 minutes (selon volume de données et GPU)
+**Temps estimé pour l'exécution du notebook complet sur Google Colab** : 3 heures pour 111K avis avec GPU.
 
 ---
 
-## ⚠️ Limitations & Améliorations
-
-### Limitations actuelles
-
-1. **Échantillon unique** : Analyse limitée à 1 produit
-2. **Modèle non fine-tuné** : Précision ~75% (vs 90%+ possible)
-3. **Pas de détection de spam** : Reviews fake non filtrées
-4. **Scalabilité** : Temps d'inférence élevé sur CPU
-
-### Roadmap d'amélioration
-
-**Court terme** :
-- [ ] Validation sur dataset labellisé (500-1000 reviews)
-- [ ] Extension à 10-20 produits de catégories variées
-- [ ] Optimisation du seuil de relevance_score
-
-**Moyen terme** :
-- [ ] Fine-tuning du modèle BART
-- [ ] Détection de spam avancée
-- [ ] Pipeline automatisé (Airflow)
-
-**Long terme** :
-- [ ] Modèle custom multi-tâches
-- [ ] A/B Testing impact business
-- [ ] API temps réel (FastAPI)
-
----
 
 ## 📚 Ressources & Références
 
@@ -303,26 +188,12 @@ graph LR
 Pour toute question sur ce case study :
 
 1. **Consulter le notebook** : Commentaires détaillés dans chaque cellule
-2. **Vérifier les SQL queries** : `/notebooks/sql_queries/`
-3. **Examiner les visualisations** : `/data/outputs/visualizations/`
-4. **Lire le rapport final** : `/docs/step_4_analysis_report.md` (après génération)
+2. **Examiner les visualisations** : `data/outputs/visualizations/local_streamlit_dashboard.py`
+3. **Lire le rapport final** : `/docs/Project2-step4-Analysis-report...pdf` (après génération)
+
 
 ---
 
-## ✅ Checklist de Complétion
-
-- [ ] Connexion Snowflake fonctionnelle
-- [ ] Extraction des données complète
-- [ ] EDA avec visualisations sauvegardées
-- [ ] Modèle NLP implémenté et testé
-- [ ] Relevance score calculé
-- [ ] Visualisations finales exportées
-- [ ] Données sauvegardées (Snowflake + local)
-- [ ] Dashboard Streamlit développé
-- [ ] Rapport final généré (5-10 pages)
-
----
-
-**Dernière mise à jour** : 2025-11-03
+**Dernière mise à jour** : 2025-11-28
 **Version** : 1.0
 **Status** : Structure créée, prêt pour exécution

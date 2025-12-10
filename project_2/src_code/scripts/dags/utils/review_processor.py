@@ -369,6 +369,11 @@ class ReviewProcessor:
             warehouse=conn.extra_dejson.get("warehouse"),
             role=conn.extra_dejson.get("role"),
         )
+        logger.info("Debug ----> Snowflake : " + str(self.snowflake_conn))
+        logger.info(f"Snowflake schema: {self.snowflake_conn.schema}")
+        logger.info(f"Snowflake database: {self.snowflake_conn.database}")
+        logger.info(f"Snowflake warehouse: {self.snowflake_conn.warehouse}")
+        logger.info(f"Snowflake role: {self.snowflake_conn.role}")
         logger.info("[OK] Snowflake connection established")
 
 
