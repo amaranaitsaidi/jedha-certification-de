@@ -1,8 +1,6 @@
 # Plan de Test et Rapport d'Acceptation
 ## Projet d'Analyse ETL des Avis Amazon
 
----
-
 # DOCUMENT 1: PLAN DE TEST
 
 ## 1. Informations du Document
@@ -13,7 +11,7 @@
 | Version | 2.0 |
 | Auteur | NAIT SAIDI Amara |
 | Date de Creation | 14 Décembre 2025 |
-| Date de Mise à Jour | 11 décembre 2025 |
+| Date de Mise à Jour | 13 Décembre 2026 |
 | Nom du Projet | Pipeline ETL d'Analyse des Avis Amazon |
 | Phase de Test | Tests d'Integration Systeme et Acceptation |
 | Statut | ✅ APPROUVÉ - Tous les tests validés |
@@ -33,7 +31,6 @@ L'objectif principal de ce projet est de déployer un pipeline ETL automatise qu
 - Charge les données traitees dans Snowflake (Data Warehouse) pour l'analytique
 - Enregistre les metadonnées d'execution et les enregistrements rejetes dans une base de données NoSQL (MongoDB)
 - Fournit une validation de la qualite des données via des tests automatises (pytest + Great Expectations)
-- **Nouveauté v2.0**: Utilise Docker Compose pour orchestrer PostgreSQL, MongoDB et Airflow
 
 ### 2.2 Objectifs des Tests
 
@@ -75,8 +72,8 @@ L'objectif principal de ce projet est de déployer un pipeline ETL automatise qu
 | Niveau de Test | Description | Responsabilite |
 |----------------|-------------|----------------|
 | Tests Unitaires | Test des composants individuels (transformations, validation) | Equipe Dev |
-| Tests d'Integration | Test des interactions entre composants (connexions DB, flux de données) | Equipe QA |
-| Tests Systeme | Test du workflow de bout en bout (pipeline complet) | Equipe QA |
+| Tests d'Integration | Test des interactions entre composants (connexions DB, flux de données) | Equipe Dev |
+| Tests Systeme | Test du workflow de bout en bout (pipeline complet) | Equipe Dev |
 | Tests de Performance | Test de charge et de temps de traitement | Equipe Performance |
 | Tests de Qualite des données | Regles de validation et exactitude | Equipe Qualite données |
 
@@ -296,18 +293,6 @@ L'objectif principal de ce projet est de déployer un pipeline ETL automatise qu
 
 ### 6.3 Exigences en données de Test
 
-| Ensemble de données | Volume | Description |
-|---------------------|--------|-------------|
-| Produits | 42 858 enregistrements | Catalogue de produits |
-| Categories | 2 enregistrements | Recherche de categorie |
-| Avis | 111 322 enregistrements | Avis clients |
-| Avis-Produits | 111 322 enregistrements | Mapping Avis-Produit |
-| Images d'Avis | 119 382 enregistrements | URLs d'images |
-| Commandes | 222 644 enregistrements | Historique de commandes |
-| **Total** | **607 630 enregistrements** | Jeu de données complet |
-
----
-
 ## 7. Criteres d'Entree et de Sortie
 
 ### 7.1 Criteres d'Entree
@@ -316,7 +301,7 @@ L'objectif principal de ce projet est de déployer un pipeline ETL automatise qu
 - [TERMINE] Tests unitaires implementes
 - [TERMINE] Environnement de test pret (conteneurs Docker)
 - [TERMINE] données de test preparees (fichiers CSV charges)
-- [TERMINE] Fichiers de configuration prets (.env, config.yaml)
+- [TERMINE] Fichiers de configuration prets (.env)
 - [TERMINE] Plan de test approuve par les parties prenantes
 
 ### 7.2 Criteres de Sortie
@@ -347,42 +332,8 @@ L'objectif principal de ce projet est de déployer un pipeline ETL automatise qu
 
 ---
 
-## 9. Calendrier des Tests
 
-| Phase | Date de Debut | Date de Fin | Duree | Responsable |
-|-------|---------------|-------------|-------|-------------|
-| Preparation des Tests | 14 Décembre 2025 | 15 Décembre 2026 | 2 jours | Equipe QA |
-| Tests Unitaires | 15 Décembre 2026 | 16 Décembre 2026 | 2 jours | Equipe Dev |
-| Tests d'Integration | 16 Décembre 2026 | 18 Décembre 2026 | 3 jours | Equipe QA |
-| Tests de Performance | 18 Décembre 2026 | 20 Décembre 2026 | 3 jours | Equipe Performance |
-| Tests de Qualite des données | 20 Décembre 2026 | 21 Décembre 2026 | 2 jours | Equipe Qualite données |
-| Tests d'Acceptation Utilisateur | 21 Décembre 2026 | 23 Décembre 2026 | 3 jours | Utilisateurs Metier |
-| Corrections de Bugs et Re-tests | 23 Décembre 2026 | 25 Décembre 2026 | 3 jours | Equipe Dev |
-| **Duree Totale** | | | **12 jours** | |
-
----
-
-## 10. Gestion des Defauts
-
-### 10.1 Niveaux de Severite
-
-| Severite | Description | Temps de Reponse | Exemple |
-|----------|-------------|------------------|---------|
-| 1 - Critique | Systeme en panne, perte de données, corruption | Immediat | Echec de connexion PostgreSQL, données corrompues dans Snowflake |
-| 2 - Elevee | Fonction majeure non fonctionnelle, bloquante | 4 heures | Echec du telechargement S3, crash de transformation |
-| 3 - Moyenne | Fonction mineure affectee, solution de contournement existe | 24 heures | Performance de requete lente, entree de journal manquante |
-| 4 - Faible | Problemes cosmetiques, amelioration | Prochaine version | Faute de frappe dans message de journal, probleme de formatage |
-
-### 10.2 Suivi des Defauts
-
-- **Outil**: GitHub Issues / JIRA
-- **Champs**: ID, Resume, Severite, Statut, Assigne a, Resolution, Date
-- **Workflow**: Ouvert -> En Cours -> Corrige -> En Test -> Ferme
-- **Reporting**: Resume quotidien des defauts pendant la phase de test
-
----
-
-## 11. Livrables des Tests
+## 9. Livrables des Tests
 
 1. **Plan de Test** (ce document)
 2. **Rapport d'Execution des Tests** (apres execution des tests)
@@ -394,12 +345,12 @@ L'objectif principal de ce projet est de déployer un pipeline ETL automatise qu
 
 ---
 
-## 12. Roles et Responsabilites
+## 10. Roles et Responsabilites
 
 | Role | Responsabilites | Membre de l'Equipe |
 |------|----------------|-------------------|
-| Responsable Tests | Planification globale des tests, coordination, reporting | [Product Owner] |
-| Responsable QA | Execution des tests, gestion des defauts | Tech Lead Data |
+| Responsable Tests | Planification globale des tests, coordination, reporting | Product Owner |
+| Responsable Dev | Execution des tests | Tech Lead Data |
 | Responsable Dev | Implementation des tests unitaires, corrections de bugs | Data Engineer |
 | Ingenieur données | Developpement du pipeline ETL, optimisation des performances | Data Engineer |
 | Analyste Qualite données | Validation des données, metriques de qualite | Data Scientist |
@@ -455,11 +406,6 @@ L'objectif principal de ce projet est de déployer un pipeline ETL automatise qu
 | Temps d'execution | < 2 min | 1 min 23 s | PASS |
 | Integrite des données | 100% | 100% | PASS |
 
-**Notes**:
-- Script `extract_to_s3.py` execute avec succes
-- Toutes les validations passees
-- Aucune perte de données detectee
-- Gestion d'erreurs et journalisation appropriees
 
 #### TC_ETL_002: Transformation et Jointure des données
 
@@ -473,8 +419,6 @@ L'objectif principal de ce projet est de déployer un pipeline ETL automatise qu
 | Champs Calcules | PASS | text_lenght, has_image, has_orderes calcules |
 | Gestion des NULL | PASS | LEFT JOIN preserve tous les avis |
 | Mapping des Champs | PASS | Tous les champs requis inclus |
-
-**Reference Code**: `src_code/scripts/process_and_store.py:63-77`
 
 ---
 
@@ -561,7 +505,7 @@ L'objectif principal de ce projet est de déployer un pipeline ETL automatise qu
 
 - **Statut**: REUSSI
 - **Date d'Execution**: 14 Décembre 2025
-- **Reference Test**: `test_data_quality.py:174-191`
+- **Reference Test**: `test_data_quality.py`
 - **Resultats**:
   - Test valide que tous les p_id dans product_reviews existent dans la table product
   - Verifie les references orphelines
@@ -598,8 +542,6 @@ L'objectif principal de ce projet est de déployer un pipeline ETL automatise qu
 pytest tests/test_transformations.py -v
 ```
 
----
-
 ### 2.4 Resultats des Tests de Performance
 
 #### TC_PERF_001: Temps d'Execution du Pipeline Complet
@@ -616,9 +558,6 @@ pytest tests/test_transformations.py -v
 | Chargement (insertion Snowflake) | < 5 min | 2 min 30 sec | PASS |
 | **Total Bout en Bout** | **< 10 min** | **4 min 50 sec** | **PASS** |
 
-**Source**: Metriques de performance de `src_code/README.md:229-234`
-
-**Recommendation**: Tests de performance reussis, systeme conforme aux SLA
 
 #### TC_PERF_002: Performance de Chargement Snowflake
 
@@ -646,25 +585,19 @@ pytest tests/test_transformations.py -v
 
 **Ventilation des Couts**:
 
-| Composant de Cout | Par 1000 Avis | Mensuel (1M avis) | Notes |
-|-------------------|---------------|-------------------|-------|
-| Calcul (local) | 0,00 $ | 0 $ | Conteneurs Docker sur machine locale |
-| Stockage AWS S3 | 0,001 $ | 1 $ | Stockage minimal pour fichiers CSV |
-| Calcul Snowflake | 0,050 $ | 50 $ | Estime selon taille entrepot |
-| Stockage Snowflake | 0,010 $ | 10 $ | Stockage compresse |
-| MongoDB | 0,00 $ | 0 $ | Conteneur Docker local |
-| Transfert de données | 0,005 $ | 5 $ | Frais de sortie AWS |
-| **Total** | **0,066 $** | **66 $** | PASS - Sous budget de 100 $ |
+| Composant          | Coût par mois ($) | Coût par jour ($) | Coût par an ($) | Notes                          |
+|-------------------|-----------------|-----------------|----------------|------------------------------------|
+| Calcul (cloud)     | 100             | 3,33            | 1200           | Conteneurs Docker sur un cluster   |
+| Stockage AWS S3    | 50              | 1,67            | 600            | Stockage minimal pour fichiers CSV |
+| Calcul Snowflake   | 1500            | 50              | 18000          | Estimé selon taille entrepôt       |
+| Stockage Snowflake | 0               | 0               | 0              | Stockage compressé inclus          |
+| MongoDB            | 60              | 2               | 720            | Conteneur Docker local             |
+| Transfert de données | 0             | 0               | 0              | Frais de sortie AWS non inclus     |
+| **Total**          | **1610**        | **53,67**       | **20520**      |                                    |
+
+
 
 **Statut**: PASS - Couts projetes dans plage acceptable
-
-**Notes**:
-- Developpement local a couts minimaux
-- Couts de production dependent de la taille de l'entrepot Snowflake et modeles d'utilisation
-- Recommande configurer alertes de couts Snowflake
-- Politiques de cycle de vie S3 recommandees pour archiver anciennes données
-
----
 
 ### 2.6 Resultats des Tests d'Integration
 
@@ -672,35 +605,11 @@ pytest tests/test_transformations.py -v
 
 - **Statut**: REUSSI
 - **Date d'Execution**: 14 Décembre 2025
-- **Resultats**:
-
-| Etape | Statut | Details |
-|-------|--------|---------|
-| PostgreSQL -> S3 | PASS | Script valide et execute |
-| S3 -> DataFrame | PASS | Logique de chargement implementee correctement |
-| Transformation données | PASS | Jointures SQL et enrichissement fonctionnels |
-| DataFrame -> Snowflake | PASS | Logique d'insertion validee |
-| Metadonnées -> MongoDB | PASS | Journalisation implementee |
-
-**Notes**:
-- Pipeline complet execute avec succes
-- Aucune perte de données
-- Tous les composants integres correctement
 
 #### TC_INT_002: Verification de l'Enregistrement MongoDB
 
 - **Statut**: REUSSI
 - **Date d'Execution**: 14 Décembre 2025
-
-**Fonctionnalites Validees**:
-- Journalisation collection pipeline_metadata
-- Capture statistiques (total_records, clean_records, rejected_records)
-- Journalisation horodatages
-- pipeline_run_id unique (UUID)
-- Gestion d'erreurs pour connexion MongoDB
-
----
-
 
 ## 3. Analyse de Couverture des Tests
 
@@ -755,34 +664,21 @@ pytest tests/test_transformations.py -v
 
 ---
 
-## 6. Lecons Apprises
+## 6. Améliorations 
 
-### 6.1 Ce qui a Bien Fonctionne
-
-1. **Excellente Structure Code**: Conception modulaire propre avec separation claire preoccupations
-2. **Tests Complets**: Suite de tests bien pensee avec bonne couverture
-3. **Qualite Documentation**: README et documentation inline exceptionnels
-4. **Focus Qualite données**: Forte emphase sur validation et verifications qualite
-5. **Stack Moderne**: Bon usage de Docker, pytest, Great Expectations
-6. **Performance**: Systeme depasse objectifs performance
-
-### 6.2 Domaines d'Amelioration
+### 6.1 Domaines d'Amelioration
 
 1. **Surveillance**: Pourrait ajouter plus observabilite (Prometheus, Grafana)
 2. **CI/CD**: Pas de pipeline automatise pour tests et deploiement
 3. **Recuperation Erreurs**: Pourrait ajouter mecanismes reessai et recuperation plus sophistiques
 4. **Optimisation Couts**: Continuer optimiser requetes Snowflake et couts stockage
 
-### 6.3 Recommendations
+### 6.2 Recommendations
 
 1. **Immediat**: Continuer surveiller performance en production
 2. **Court terme**: Implementer pipeline CI/CD avec GitHub Actions
 3. **Moyen terme**: Ajouter infrastructure surveillance et alerte
 4. **Long terme**: Considerer Apache Airflow pour orchestration a grande echelle
-
----
-
-
 ---
 
 ## 7. Conclusion
@@ -798,17 +694,16 @@ Le Systeme ETL d'Analyse des Avis Amazon a fait l'objet d'une planification et e
 - Conception cout-efficace (0,066 $ par 1000 avis)
 - Performance depassant SLA (4 min 50 sec vs cible 10 min)
 
-**Aucun defaut identifie** - Systeme pret pour deploiement production
 
 ### 11.2 Evaluation de la Preparation
 
 | Aspect | Preparation | Confiance |
 |--------|-------------|-----------|
-| **Qualite Code** | Pret Production | Elevee |
-| **Couverture Tests** | Excellente | Elevee |
+| **Qualite Code** | Pret Production | Assez bonne |
+| **Couverture Tests** | Excellente | Assez bonne |
 | **Documentation** | Excellente | Elevee |
-| **Performance** | Depasse SLA | Elevee |
-| **Infrastructure** | Validee | Elevee |
+| **Performance** | Depasse SLA | Acceptable |
+| **Infrastructure** | Validee | Acceptable |
 
 **Preparation Globale**: **PRET POUR PRODUCTION**
 
@@ -832,7 +727,7 @@ Le Systeme ETL d'Analyse des Avis Amazon a fait l'objet d'une planification et e
 
 ---
 
-**Rapport Prepare Par**: Equipe Data Engineering & QA
+**Rapport Prepare Par**: Equipe Data Engineering & Dev
 **Date Revue**: 14 Décembre 2025
 **Prochaine Revue**: Apres deploiement production
 
@@ -848,9 +743,8 @@ Le Systeme ETL d'Analyse des Avis Amazon a fait l'objet d'une planification et e
 |-------|--------|
 | **Nom du Projet** | Systeme ETL d'Analyse des Avis Amazon avec Apache Airflow |
 | **Version Testee** | 2.0 (Architecture Airflow) |
-| **Periode de Test** | 1er décembre 2025 au 11 décembre 2025 |
-| **Environnement** | Développement Local avec Docker (PostgreSQL, MongoDB, Airflow) |
-| **Date d'Acceptation** | 11 décembre 2025 |
+| **Periode de Test** |  14 décembre 2025 |
+| **Date d'Acceptation** | 15 décembre 2025 |
 | **Decision** | ✅ **GO - APPROUVÉ POUR PRODUCTION** |
 
 ### 1.2 Enonce Recapitulatif de la Decision
@@ -1065,76 +959,10 @@ Le Système ETL d'Analyse des Avis Amazon a été **rigoureusement testé** et d
 
 **Niveau Risque Global**: **FAIBLE** - Acceptable avec surveillance et attenuation appropriees
 
----
 
-## 6. Evaluation Architecture
+## 6. Recommendations
 
-### 6.1 Revue Architecture Technique
-
-**Modele Architecture**: **Architecture Medallion (Bronze -> Silver -> Gold)**
-
-```
-PostgreSQL (Bronze)  ->  S3 (Data Lake)  ->  Snowflake (Gold)
-    données Source       Stockage Brut        Pret Analytique
-         |                     |                     |
-    111K avis            Fichiers CSV         données nettoyees,
-    42K produits         Horodatees              enrichies
-    222K commandes       Versionnees         Validees
-                              |
-                         MongoDB
-                   (Metadonnées & Journaux)
-```
-
-**Points Forts Architecture**:
-- Separation claire preoccupations
-- Approche data lake evolutive
-- Technologies cloud-natives
-- Stockage et calcul decouple
-- Journalisation complete
-
-**Considerations Architecture**:
-- Traitement point unique (pas encore distribue)
-- Pas capacite temps reel (lots uniquement)
-- Tolerance pannes limitee (reessai basique necessaire)
-
-**Notation**: **4,5/5** - Architecture solide, prete pour production
-
-### 6.2 Evaluation Qualite Code
-
-| Dimension | Notation | Evidence |
-|-----------|----------|----------|
-| **Modularite** | 5/5 | Separation claire modules |
-| **Lisibilite** | 5/5 | Code propre, bon nommage |
-| **Maintenabilite** | 5/5 | Bien documente, bons tests |
-| **Evolutivite** | 4/5 | Decoupage implemente, bonne conception |
-| **Gestion Erreurs** | 4/5 | Blocs try-except, journalisation |
-| **Performance** | 5/5 | Operations pandas efficaces |
-| **Securite** | 4/5 | Credentials dans .env |
-| **Tests** | 5/5 | Bonne couverture, tous executes |
-
-**Qualite Globale Code**: **4,7/5** - Pret Production
-
-### 6.3 Evaluation Stack Technologique
-
-| Technologie | Objectif | Evaluation | Recommendation |
-|-------------|----------|------------|----------------|
-| **Python 3.11** | Scripts ETL | Excellent | Continuer |
-| **PostgreSQL** | BD Source | Bon | Continuer |
-| **AWS S3** | Data Lake | Standard industrie | Continuer |
-| **Snowflake** | Entrepot données | Excellent choix | Continuer |
-| **MongoDB** | Journalisation | Bon pour journaux | Continuer |
-| **pandas** | Traitement données | Bon pour echelle actuelle | Surveiller performance |
-| **pytest** | Tests | Standard industrie | Continuer |
-| **Great Expectations** | Qualite données | Meilleure pratique | Continuer |
-| **Docker** | Conteneurisation | Bon pour dev | Continuer |
-
-**Notation Stack Technologique**: **4,8/5** - Choix modernes et appropries
-
----
-
-## 7. Recommendations
-
-### 7.1 Pre-Production (A FAIRE Avant Mise en Production)
+### 6.1 Pre-Production (A FAIRE Avant Mise en Production)
 
 | # | Recommendation | Priorite | Effort | Impact | Responsable |
 |---|----------------|----------|--------|--------|-------------|
@@ -1146,7 +974,7 @@ PostgreSQL (Bronze)  ->  S3 (Data Lake)  ->  Snowflake (Gold)
 
 **Effort Total Pre-Production**: **8 jours**
 
-### 7.2 Semaine 1 Post-Production (Devrait Faire)
+### 6.2 Semaine 1 Post-Production (Devrait Faire)
 
 | # | Action | Responsable | Critere Succes |
 |---|--------|-------------|----------------|
@@ -1156,7 +984,7 @@ PostgreSQL (Bronze)  ->  S3 (Data Lake)  ->  Snowflake (Gold)
 | 4 | Collecte retours utilisateurs | Equipe Produit | Identifier points douleur |
 | 5 | Preparation reponse incidents | Equipe SRE | < 15 min temps reponse |
 
-### 7.3 Mois 1 Post-Production (Doit Faire)
+### 6.3 Mois 1 Post-Production (Doit Faire)
 
 | # | Action | Responsable | Calendrier |
 |---|--------|-------------|------------|
@@ -1166,21 +994,21 @@ PostgreSQL (Bronze)  ->  S3 (Data Lake)  ->  Snowflake (Gold)
 | 4 | Finalisation formation utilisateur | Equipe Formation | Semaine 4 |
 | 5 | Premiere retrospective et ameliorations | Toutes Equipes | Semaine 4 |
 
-### 7.4 Ameliorations Long Terme (Bon d'Avoir)
+### 6.4 Ameliorations Long Terme 
 
 | Amelioration | Calendrier | Valeur | Effort |
 |--------------|------------|--------|--------|
-| **Capacite traitement temps reel** | Q3 2025 | Moyen | Eleve |
-| **Implementation pipeline CI/CD** | Q1 2025 | Eleve | Moyen |
-| **Tableau bord surveillance (Grafana)** | Q1 2025 | Moyen | Moyen |
-| **Orchestration Apache Airflow** | Q3 2025 | Eleve | Eleve |
+| **Capacite traitement temps reel** | Q4 2025 | Moyen | Eleve |
+| **Implementation pipeline CI/CD** | Q1 2026 | Eleve | Moyen |
+| **Tableau bord surveillance (Grafana)** | Q1 2026 | Moyen | Moyen |
+| **Orchestration Apache Airflow** | Q1 2026 | Eleve | Eleve |
 | **Support multi-langue** | 2026 | Moyen | Moyen |
 
 ---
 
-## 8. Approbations Parties Prenantes
+## 7. Approbations Parties Prenantes
 
-### 8.1 Decision Acceptation
+### 7.1 Decision Acceptation
 
 **Decision**: **GO - APPROUVE POUR PRODUCTION**
 
@@ -1192,63 +1020,15 @@ PostgreSQL (Bronze)  ->  S3 (Data Lake)  ->  Snowflake (Gold)
 |------|----------|--------------|------|
 | **Responsable Metier** | Approuve | Excellente base, pret pour production |25 Décembre 2025 |
 | **Directeur IT** | Approuve | Architecture solide, pret deploiement | 25 Décembre 2025 |
-| **Responsable Data Engineering** | Approuve | Qualite code excellente, pret production | _______ | 25 Décembre 2025 |
-| **Responsable QA** | Approuve | Suite tests complete, tous passes |25 Décembre 2025 |
+| **Responsable Data Engineering** | Approuve | Qualite code excellente, pret production | 25 Décembre 2025 |
+| **Responsable Dev** | Approuve | Suite tests complete, tous passes |25 Décembre 2025 |
 | **Responsable Operations** | Approuve | Systeme pret operations |  25 Décembre 2025 |
 | **Responsable Securite** | Approuve | Pratiques securite acceptables |  25 Décembre 2025 |
 
-### 8.2 Resume Approbation
+### 7.2 Resume Approbation
 
 | Categorie Decision | Nombre | Pourcentage |
 |-------------------|--------|-------------|
 | **Approuve** | 6 | 100% |
 | **Approuve avec Conditions** | 0 | 0% |
 | **Rejete** | 0 | 0% |
-
----
-
-## 9. Plan Implementation
-
-### 9.1 Liste Verification Preparation Mise en Production
-
-| # | Tache | Statut | Responsable | Date Echeance |
-|---|-------|--------|-------------|---------------|
-| 1 | Developpement code termine | TERMINE | Equipe Dev | 14 Décembre 2025 |
-| 2 | Suite tests implementee | TERMINE | Equipe QA | 14 Décembre 2025 |
-| 3 | Documentation complete | TERMINE | Tech Writer | 14 Décembre 2025 |
-| 4 | Configuration environnement production | TERMINE | DevOps | 20 Décembre 2025 |
-| 5 | Execution suite tests complete | TERMINE | Equipe QA | 21 Décembre 2025 |
-| 6 | Validation performance | TERMINE | Equipe Ing | 22 Décembre 2025 |
-| 7 | Validation couts | TERMINE | FinOps | 23 Décembre 2025 |
-| 8 | Creation manuel operations | TERMINE | Equipe SRE | 24 Décembre 2025 |
-| 9 | Configuration surveillance | TERMINE | DevOps | 24 Décembre 2025 |
-| 10 | Formation utilisateur | TERMINE | Formation | 25 Décembre 2025 |
-| 11 | Approbation finale | TERMINE | Equipe Exec | 25 Décembre 2025 |
-
-**Completion Actuelle**: 11/11 = **100%**
-**Date Mise en Production Prevue**: **29 Décembre 2025**
-
-### 9.2 Strategie Deploiement
-
-**Approche Recommandee**: **Deploiement Direct en Production**
-
-| Phase | Description | Duree | Criteres Succes |
-|-------|-------------|-------|-----------------|
-| **Phase 1: Mise en Production** | Deploiement systeme complet | 1 jour | Tous systemes operationnels |
-| **Phase 2: Surveillance** | Surveillance rapprochee premiere semaine | 1 semaine | Aucun probleme critique |
-| **Phase 3: Optimisation** | Ajustements base données production | 2 semaines | Performance stable |
-| **Phase 4: Operation Normale** | Operation continue | Continu | Respect tous SLA |
-
-**Plan Retour Arriere**: Processus manuel disponible pendant 30 jours comme solution repli
-
-### 9.3 Metriques Succes (Premiers 90 Jours)
-
-| Metrique | Semaine 1 | Semaine 4 | Semaine 12 | Cible |
-|----------|-----------|-----------|------------|-------|
-| **Disponibilite** | > 95% | > 98% | > 99% | 99,5% |
-| **Temps Traitement** | < 15 min | < 10 min | < 8 min | < 10 min |
-| **Qualite données** | > 95% | > 97% | > 98% | > 95% |
-| **Cout par 1K** | < 0,10 $ | < 0,08 $ | < 0,07 $ | < 0,10 $ |
-| **Intervention Manuelle** | < 20% | < 10% | < 5% | < 10% |
-
----
