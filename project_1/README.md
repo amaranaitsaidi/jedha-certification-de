@@ -91,82 +91,9 @@ Le projet utilise une base de données PostgreSQL hébergée sur Neon. La chaîn
 2. Exécuter les cellules séquentiellement
 3. Les graphiques de statistiques seront générés automatiquement
 
-## Résultats Clés
 
-### Statistiques de l'Échantillon (10 produits)
-
-- **Total reviews** : 2 592
-- **Distribution ratings** : 76,4% de 5★ (biais positif)
-- **Présence d'images** : 31,6% des reviews
-- **Longueur médiane** : 44 caractères
-- **Longueur moyenne** : 117 caractères
-
-### Insights Principaux
-
-1. **Biais positif massif** : Les produits analysés sont très bien notés
-2. **Textes courts** : Majorité de reviews brèves ("Excellent !", "Top !")
-3. **Reviews négatives plus détaillées** : Les 1★ et 2★ contiennent plus de contexte
-4. **Images corrélées au sentiment** : 35,7% pour 5★ vs 7,6% pour 1★
-
-### Classification
-
-Avec un seuil de **80 points** :
-- **Reviews pertinentes** : 39 (1,5%)
-- **Reviews non pertinentes** : 2 553 (98,5%)
-
-*Note : Le seuil est volontairement strict pour ce prototype*
-
-## Limitations et Perspectives
-
-### Limitations Identifiées
-
-1. **Échantillon restreint** : Seulement 10 produits analysés
-2. **Biais des données** : 76,4% de 5★, peu représentatif de tous les produits
-3. **Textes courts** : Médiane de 44 caractères limite l'analyse NLP
-4. **Achat vérifié** : 100% dans l'échantillon (pas de différenciation possible)
-5. **Seuil strict** : 80% peut être trop élevé (98,5% classés comme non pertinents)
-
-### Améliorations Proposées
-
-#### Court Terme (0-3 mois)
-- Filtrer les reviews <30 caractères avant classification
-- Élargir à 20-50 produits de catégories variées
-- Ajuster la pondération du `text_length_score`
-- Validation manuelle sur 500-1000 reviews
-
-#### Moyen Terme (3-6 mois)
-- Fine-tuning avec dataset Amazon labelisé
-- Intégration d'embeddings (sentence-transformers)
-- Déploiement sur infrastructure GPU (AWS/GCP)
-
-#### Long Terme (6-12 mois)
-- Modèle multi-tâches : catégorisation + scoring + sentiment
-- Détection de spam et fake reviews
-- A/B testing pour mesurer l'impact business
-
-## Tests Fonctionnels
-
-Le prototype inclut des tests unitaires pour :
-- `calculate_text_length_score()` : Validation de la fonction gaussienne
-- `is_extreme_rating()` : Vérification des ratings extrêmes
-- `sentiment_score()` : Tests VADER sur textes positifs/négatifs
-- `calculate_relevance_score()` : Intégrité du pipeline complet
-
-Tous les tests passent avec succès ✅
 
 ## Auteurs
 
-- **Amara NAIT SAIDI** - Développeur principal
-- **Dyhia TOUAHRI** - Contributeur
+- **Amara NAIT SAIDI** 
 
-## Licence
-
-Projet académique - Certification Jedha RNCP 37172
-
-## Contact
-
-Pour toute question concernant ce projet, veuillez contacter l'équipe via le dépôt GitHub.
-
----
-
-**Date de dernière mise à jour** : Décembre 2025
