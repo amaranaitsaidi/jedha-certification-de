@@ -1,0 +1,182 @@
+version: '3.8'
+
+services:
+  airflow-postgres:
+    image: postgres:13
+    container_name: airflow-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER_AIRFLOW:-airflow} 
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_AIRFLOW:-airflow} 
+      POSTGRES_DB: ${POSTGRES_DB_AIRFLOW:-airflow}
+    ports:
+      - "5434:5432" 
+    volumes:
+      - ./src_code/scripts/data/postgres:/var/lib/postgresql/data
+    networks:
+      - review-analysis-network
+
+  redis:
+    image: redis:latest
+    container_name: airflow-redis
+    networks:
+      - review-analysis-network
+
+  airflow-init:
+    image: apache/airflow:2.8.3
+    container_name: airflow-init
+    depends_on:
+      - airflow-postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+
+      # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW (via .env) ------------
+      AIRFLOW_CONN_PG_AMAZON: ${AIRFLOW_CONN_PG_AMAZON}
+      AIRFLOW_CONN_AWS_S3_DEFAULT: ${AIRFLOW_CONN_AWS_S3_DEFAULT}
+      AIRFLOW_CONN_MONGO: ${AIRFLOW_CONN_MONGO}
+      AIRFLOW_CONN_SNOWFLAKE_CONN: ${AIRFLOW_CONN_SNOWFLAKE_CONN}
+      # --------------------------------------------------------------------
+
+      # ------------ SMTP CONFIGURATION FOR EMAIL ALERTS (via .env) -------
+      AIRFLOW__SMTP__SMTP_HOST: ${AIRFLOW__SMTP__SMTP_HOST}
+      AIRFLOW__SMTP__SMTP_STARTTLS: ${AIRFLOW__SMTP__SMTP_STARTTLS}
+      AIRFLOW__SMTP__SMTP_SSL: ${AIRFLOW__SMTP__SMTP_SSL}
+      AIRFLOW__SMTP__SMTP_PORT: ${AIRFLOW__SMTP__SMTP_PORT}
+      AIRFLOW__SMTP__SMTP_MAIL_FROM: ${AIRFLOW__SMTP__SMTP_MAIL_FROM}
+      AIRFLOW__SMTP__SMTP_USER: ${AIRFLOW__SMTP__SMTP_USER}
+      AIRFLOW__SMTP__SMTP_PASSWORD: ${AIRFLOW__SMTP__SMTP_PASSWORD}
+      ALERT_EMAIL: ${ALERT_EMAIL}
+      # --------------------------------------------------------------------
+    
+    volumes:
+      - ./src_code/scripts/dags:/opt/airflow/dags
+      - ./src_code/scripts/logs:/opt/airflow/logs
+      - ./src_code/scripts/plugins:/opt/airflow/plugins
+      - ./src_code/scripts/requirements_airflow.txt:/requirements.txt
+    entrypoint: /bin/bash
+    command: -c "pip install -r /requirements.txt && airflow db init && airflow users create --username ${AIRFLOW_INITIAL_ADMIN_USER:-admin} --password ${AIRFLOW_INITIAL_ADMIN_PASSWORD:-admin} --firstname Airflow --lastname Admin --role Admin --email admin@example.com"
+    networks:
+      - review-analysis-network
+
+  airflow-webserver:
+    image: apache/airflow:2.8.3
+    container_name: airflow-webserver
+    depends_on:
+      - airflow-postgres
+      - redis
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
+
+      # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW (via .env) ------------
+      AIRFLOW_CONN_PG_AMAZON: ${AIRFLOW_CONN_PG_AMAZON}
+      AIRFLOW_CONN_AWS_S3_DEFAULT: ${AIRFLOW_CONN_AWS_S3_DEFAULT}
+      AIRFLOW_CONN_MONGO: ${AIRFLOW_CONN_MONGO}
+      AIRFLOW_CONN_SNOWFLAKE_CONN: ${AIRFLOW_CONN_SNOWFLAKE_CONN}
+      # --------------------------------------------------------------------
+
+      # ------------ SMTP CONFIGURATION FOR EMAIL ALERTS (via .env) -------
+      AIRFLOW__SMTP__SMTP_HOST: ${AIRFLOW__SMTP__SMTP_HOST}
+      AIRFLOW__SMTP__SMTP_STARTTLS: ${AIRFLOW__SMTP__SMTP_STARTTLS}
+      AIRFLOW__SMTP__SMTP_SSL: ${AIRFLOW__SMTP__SMTP_SSL}
+      AIRFLOW__SMTP__SMTP_PORT: ${AIRFLOW__SMTP__SMTP_PORT}
+      AIRFLOW__SMTP__SMTP_MAIL_FROM: ${AIRFLOW__SMTP__SMTP_MAIL_FROM}
+      AIRFLOW__SMTP__SMTP_USER: ${AIRFLOW__SMTP__SMTP_USER}
+      AIRFLOW__SMTP__SMTP_PASSWORD: ${AIRFLOW__SMTP__SMTP_PASSWORD}
+      ALERT_EMAIL: ${ALERT_EMAIL}
+      # --------------------------------------------------------------------
+
+    volumes:
+      - ./src_code/scripts/dags:/opt/airflow/dags
+      - ./src_code/scripts/logs:/opt/airflow/logs
+      - ./src_code/scripts/plugins:/opt/airflow/plugins
+      - ./src_code/scripts/requirements_airflow.txt:/requirements.txt
+    ports:
+      - "8080:8080"
+    command: bash -c "pip install -r /requirements.txt && airflow webserver"
+    networks:
+      - review-analysis-network
+
+  airflow-scheduler:
+    image: apache/airflow:2.8.3
+    container_name: airflow-scheduler
+    depends_on:
+      - airflow-webserver
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
+
+      # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW (via .env) ------------
+      AIRFLOW_CONN_PG_AMAZON: ${AIRFLOW_CONN_PG_AMAZON}
+      AIRFLOW_CONN_AWS_S3_DEFAULT: ${AIRFLOW_CONN_AWS_S3_DEFAULT}
+      AIRFLOW_CONN_MONGO: ${AIRFLOW_CONN_MONGO}
+      AIRFLOW_CONN_SNOWFLAKE_CONN: ${AIRFLOW_CONN_SNOWFLAKE_CONN}
+      # --------------------------------------------------------------------
+
+      # ------------ SMTP CONFIGURATION FOR EMAIL ALERTS (via .env) -------
+      AIRFLOW__SMTP__SMTP_HOST: ${AIRFLOW__SMTP__SMTP_HOST}
+      AIRFLOW__SMTP__SMTP_STARTTLS: ${AIRFLOW__SMTP__SMTP_STARTTLS}
+      AIRFLOW__SMTP__SMTP_SSL: ${AIRFLOW__SMTP__SMTP_SSL}
+      AIRFLOW__SMTP__SMTP_PORT: ${AIRFLOW__SMTP__SMTP_PORT}
+      AIRFLOW__SMTP__SMTP_MAIL_FROM: ${AIRFLOW__SMTP__SMTP_MAIL_FROM}
+      AIRFLOW__SMTP__SMTP_USER: ${AIRFLOW__SMTP__SMTP_USER}
+      AIRFLOW__SMTP__SMTP_PASSWORD: ${AIRFLOW__SMTP__SMTP_PASSWORD}
+      ALERT_EMAIL: ${ALERT_EMAIL}
+      # --------------------------------------------------------------------
+
+    volumes:
+      - ./src_code/scripts/dags:/opt/airflow/dags
+      - ./src_code/scripts/logs:/opt/airflow/logs
+      - ./src_code/scripts/plugins:/opt/airflow/plugins
+      - ./src_code/scripts/requirements_airflow.txt:/requirements.txt
+    command: bash -c "pip install -r /requirements.txt && airflow scheduler"
+    networks:
+      - review-analysis-network
+
+
+  airflow-worker:
+    image: apache/airflow:2.8.3
+    container_name: airflow-worker
+    depends_on:
+      - airflow-scheduler
+    environment:
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-postgres/airflow
+
+      # ------------ CONNEXIONS AUTOMATIQUES AIRFLOW (via .env) ------------
+      AIRFLOW_CONN_PG_AMAZON: ${AIRFLOW_CONN_PG_AMAZON}
+      AIRFLOW_CONN_AWS_S3_DEFAULT: ${AIRFLOW_CONN_AWS_S3_DEFAULT}
+      AIRFLOW_CONN_MONGO: ${AIRFLOW_CONN_MONGO}
+      AIRFLOW_CONN_SNOWFLAKE_CONN: ${AIRFLOW_CONN_SNOWFLAKE_CONN}
+      # --------------------------------------------------------------------
+
+      # ------------ SMTP CONFIGURATION FOR EMAIL ALERTS (via .env) -------
+      AIRFLOW__SMTP__SMTP_HOST: ${AIRFLOW__SMTP__SMTP_HOST}
+      AIRFLOW__SMTP__SMTP_STARTTLS: ${AIRFLOW__SMTP__SMTP_STARTTLS}
+      AIRFLOW__SMTP__SMTP_SSL: ${AIRFLOW__SMTP__SMTP_SSL}
+      AIRFLOW__SMTP__SMTP_PORT: ${AIRFLOW__SMTP__SMTP_PORT}
+      AIRFLOW__SMTP__SMTP_MAIL_FROM: ${AIRFLOW__SMTP__SMTP_MAIL_FROM}
+      AIRFLOW__SMTP__SMTP_USER: ${AIRFLOW__SMTP__SMTP_USER}
+      AIRFLOW__SMTP__SMTP_PASSWORD: ${AIRFLOW__SMTP__SMTP_PASSWORD}
+      ALERT_EMAIL: ${ALERT_EMAIL}
+      # --------------------------------------------------------------------
+    volumes:
+      - ./src_code/scripts/dags:/opt/airflow/dags
+      - ./src_code/scripts/logs:/opt/airflow/logs
+      - ./src_code/scripts/plugins:/opt/airflow/plugins
+      - ./src_code/scripts/requirements_airflow.txt:/requirements.txt
+    command: bash -c "pip install -r /requirements.txt && airflow celery worker"
+    networks:
+      - review-analysis-network
+
+networks:
+  review-analysis-network:
+    external: true
