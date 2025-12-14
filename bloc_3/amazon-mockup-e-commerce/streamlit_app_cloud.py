@@ -272,7 +272,7 @@ if selected_p_id:
             st.info(f"📊 **{len(product_reviews)}** review(s) pertinente(s) trouvée(s)")
 
             for idx, review in enumerate(product_reviews, 1):
-                rating_display = "⭐" * review['rating']
+                rating_display = "⭐" * int(review['rating'])
                 relevance_score = review.get('relevance_score', 0.0)
                 confidence_score = review.get('confidence_score', 0.0)
 
