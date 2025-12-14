@@ -1,2 +1,28 @@
+# Environment variables
 project_2/.env
 project_3/.env
+.env
+*/.env
+
+# Streamlit secrets
+.streamlit/secrets.toml
+*/.streamlit/secrets.toml
+
+# Dev containers (auto-generated)
+.devcontainer/
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
